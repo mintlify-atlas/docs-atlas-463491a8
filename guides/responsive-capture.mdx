@@ -1,0 +1,124 @@
+---
+title: "Capture responsive design across breakpoints"
+description: "Use designlang's --responsive flag to crawl any website at 4 viewport sizes and map exactly which design properties change at each breakpoint."
+---
+
+Most design extraction tools give you a snapshot at a single viewport width. designlang's `--responsive` flag goes further: it loads the page four separate times at different screen sizes and compares the results, building a precise map of what changes between each breakpoint. You find out not just what a design looks like, but how it adapts — which navigation elements collapse, when grid columns stack, and how heading sizes scale.
+
+## Run a responsive extraction
+
+```bash
+designlang https://vercel.com --responsive
+```
+
+This crawls the site at four viewports and outputs a `responsive` section in all generated files showing what changed at each breakpoint transition.
+
+## The four viewports
+
+The `captureResponsive` function in `src/extractors/responsive.js` defines four fixed viewport sizes:
+
+| Name | Width | Height |
+|------|-------|--------|
+| mobile | 375px | 812px |
+| tablet | 768px | 1024px |
+| desktop | 1280px | 800px |
+| wide | 1920px | 1080px |
+
+At each viewport, designlang captures: body font size, heading sizes (h1–h3), navigation visibility, hamburger menu state, grid column count, flex container count, and page scroll height.
+
+## Example output
+
+Running `designlang https://vercel.com --responsive` produces output like this in the design language markdown:
+
+```
+Responsive: 4 viewports, 3 breakpoint changes
+  375px → 768px: Nav visibility hidden → visible, Hamburger shown → hidden
+  768px → 1280px: Max grid columns 1 → 3, H1 size 32px → 48px
+```
+
+The JSON output surfaces the same data in a structured format under the `responsive.changes` key, with each change listing the property name, the value at the smaller viewport, and the value at the larger viewport.
+
+## What the diff tracks
+
+Between each pair of adjacent viewports, the extractor compares:
+
+<Steps>
+  <Step title="Typography scaling">
+    Body font size and h1 font size. Captures responsive type scales where headings grow at wider viewports.
+  </Step>
+  <Step title="Navigation visibility">
+    Whether the `<nav>` element (or an element with `role="navigation"`) has `display: none`. Tracks the classic mobile nav → visible desktop nav transition.
+  </Step>
+  <Step title="Hamburger menu state">
+    Whether a hamburger or mobile menu toggle (detected by class name or `aria-label`) is visible. Pairs with nav visibility to confirm the full mobile nav pattern.
+  </Step>
+  <Step title="Grid column count">
+    The maximum number of columns found in any CSS grid on the page. Captures card grids and content layouts that stack on mobile and expand on desktop.
+  </Step>
+  <Step title="Page height">
+    When the page height changes by more than 200px between viewports, this is recorded as a breakpoint change. Indicates significant layout reflow.
+  </Step>
+</Steps>
+
+## The `--full` flag includes responsive
+
+If you use `--full`, responsive capture is included automatically alongside screenshots and interaction states:
+
+```bash
+designlang https://vercel.com --full
+```
+
+```
+Responsive: 4 viewports, 3 breakpoint changes
+Interactions: 8 state changes captured
+```
+
+You do not need to specify `--responsive` separately when using `--full`.
+
+## Capture interaction states
+
+Related to responsive capture, the `--interactions` flag records hover, focus, and active state transitions by programmatically triggering them on interactive elements:
+
+```bash
+designlang https://stripe.com --interactions
+```
+
+The `captureInteractions` function in `src/extractors/interactions.js` hovers and focuses up to 10 buttons, 10 links, and 5 inputs, diffing their computed styles before and after each state change. It tracks `color`, `backgroundColor`, `borderColor`, `boxShadow`, `transform`, `opacity`, `outline`, `textDecoration`, and `scale`.
+
+Example interaction output:
+
+```css
+/* Button Hover */
+background-color: rgb(83, 58, 253) → rgb(67, 47, 202);
+box-shadow: none → 0 4px 12px rgba(83, 58, 253, 0.4);
+
+/* Input Focus */
+border-color: rgb(200, 200, 200) → rgb(83, 58, 253);
+outline: none → 2px solid rgb(83, 58, 253);
+```
+
+## Combine responsive and interaction capture
+
+<CodeGroup>
+
+```bash Responsive only
+designlang https://vercel.com --responsive
+```
+
+```bash Interactions only
+designlang https://stripe.com --interactions
+```
+
+```bash Both flags
+designlang https://stripe.com --responsive --interactions
+```
+
+```bash Everything
+designlang https://stripe.com --full
+```
+
+</CodeGroup>
+
+<Note>
+  Responsive capture opens four separate browser contexts in sequence, so extraction takes longer than a standard run — typically 30–60 seconds depending on page load time. Use `--wait <ms>` to add a settle delay at each viewport if the page uses JavaScript-driven responsive layout.
+</Note>

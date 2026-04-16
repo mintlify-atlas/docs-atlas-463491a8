@@ -1,97 +1,47 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "designlang docs — design extraction CLI"
+description: "Documentation for designlang — the CLI that extracts colors, typography, spacing, and shadows from any live website and outputs 8 ready-to-use design files."
 ---
 
-## Setting up
+designlang is a CLI tool that reverse-engineers the design system of any live website. Point it at a URL and it produces 8 ready-to-use output files: AI-optimized markdown, W3C design tokens, Tailwind config, CSS custom properties, Figma variables, React theme, shadcn/ui theme, and a visual HTML preview.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Extract your first design system in under a minute
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Installation" icon="download" href="/installation">
+    Install globally or run with npx — no config needed
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Command Reference" icon="terminal" href="/commands/extract">
+    Every command, flag, and option documented with examples
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Agent Skill" icon="robot" href="/guides/agent-skill">
+    Use designlang inside Claude Code and 40+ AI coding agents
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Get started in 30 seconds
 
-Everything you need to create world-class documentation.
+<Steps>
+  <Step title="Run the extractor">
+    No install required — npx pulls the latest version automatically.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+    ```bash
+    npx designlang https://stripe.com
+    ```
+  </Step>
+  <Step title="Get everything at once">
+    Add `--full` to also capture screenshots, responsive breakpoints, and interaction states.
 
-## Need inspiration?
+    ```bash
+    npx designlang https://stripe.com --full
+    ```
+  </Step>
+  <Step title="Use the output">
+    Drop the generated files directly into your project — Tailwind config, CSS variables, Figma variables, and more are all ready to use.
+  </Step>
+</Steps>
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Note>
+  Want to use designlang inside an AI coding agent? See the [Agent Skill guide](/guides/agent-skill) — it works with Claude Code, Cursor, Codex, and 40+ other agents via the skills ecosystem.
+</Note>

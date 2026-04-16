@@ -1,0 +1,91 @@
+---
+title: "How designlang extracts design systems"
+description: "designlang runs a 5-stage pipeline: Playwright crawl, computed style extraction, 17 extractor modules, 8 output formatters, and a design scoring pass."
+---
+
+designlang reverse-engineers a live website's design system by launching a real browser, reading every computed style the browser has resolved, and passing that raw data through a pipeline of specialized modules that classify, deduplicate, and format the output. No static analysis, no scraping HTML attributes — it reads the same styles a user's browser renders.
+
+## The extraction pipeline
+
+<Steps>
+  <Step title="Crawl">
+    designlang launches headless Chromium via Playwright and navigates to your URL. It waits for `domcontentloaded`, then waits for the network to go idle so that fonts, lazy-loaded assets, and deferred scripts have time to settle. You can pass `--wait <ms>` to add an additional delay for SPAs that animate content in after load.
+
+    The crawler opens with a default viewport of 1280×800. Pass `--width` and `--height` to match a specific device. If you need to access authenticated pages, supply `--cookie` or `--header` flags and the crawler sets them on the browser context before navigating.
+
+    With `--depth <n>`, the crawler discovers internal links on the page and visits additional pages — capped at 15 total regardless of the depth value — merging their style data into a single dataset for site-wide token extraction.
+  </Step>
+  <Step title="Extract">
+    A single `page.evaluate()` call runs inside the browser context and walks every DOM element — up to 5,000 — calling `getComputedStyle()` on each one. For each element it records 25+ properties: color, background color, font family, font size, font weight, line height, letter spacing, padding, margin, gap, border radius, box shadow, z-index, transitions, animations, display mode, flex and grid properties, and max-width.
+
+    In the same pass it collects CSS custom properties from `:root`, media query conditions from all accessible stylesheets, keyframe definitions, inline SVGs, `@font-face` rules, Google Fonts links, and image metadata. All of this is returned as a single structured object.
+
+    If `--dark` is passed, a second browser context opens with `colorScheme: 'dark'` and the same extraction runs again for dark mode comparison.
+  </Step>
+  <Step title="Process">
+    17 extractor modules receive the raw computed-style array and transform it into meaningful design data. Each module is responsible for one property domain: colors, typography, spacing, shadows, borders, CSS variables, breakpoints, animations, component patterns, accessibility, layout, gradients, z-index, icons, fonts, images, and scoring.
+
+    The modules parse pixel values, cluster similar colors using perceptual distance, detect spacing base units, calculate WCAG contrast ratios, infer grid column patterns, classify gradients by type and complexity, and deduplicate SVG icons by their markup.
+  </Step>
+  <Step title="Format">
+    8 formatter modules take the processed `design` object and write it to disk in different formats: W3C design tokens JSON, Tailwind config, CSS custom properties, a visual HTML preview, Figma variables JSON, a React/CSS-in-JS theme, a shadcn/ui theme, and an AI-optimized markdown file. File names are derived from the URL — `https://stripe.com` becomes `stripe-com-*`.
+  </Step>
+  <Step title="Score">
+    The scoring module runs last, after all extractors have populated the `design` object. It evaluates the design across 7 categories — color discipline, typography consistency, spacing system, shadow consistency, border radius consistency, accessibility, and CSS variable tokenization — and produces a weighted score from 0–100 with a letter grade (A–F) and a list of specific issues.
+
+    Optional captures — responsive viewport snapshots (`--responsive`), interaction state recording (`--interactions`), and component screenshots (`--screenshots`) — run as separate Playwright passes and their results are merged into the output files.
+  </Step>
+</Steps>
+
+## The `extractDesignLanguage` function
+
+The entire pipeline is exposed as a single async function when you use designlang programmatically:
+
+```javascript
+import { extractDesignLanguage } from 'designlang';
+
+const design = await extractDesignLanguage('https://stripe.com', {
+  dark: false,
+  depth: 0,
+  screenshots: false,
+  width: 1280,
+  height: 800,
+  wait: 0,
+});
+```
+
+The returned `design` object has the following shape:
+
+```javascript
+{
+  meta: {
+    url: 'https://stripe.com',
+    title: 'Stripe | Financial Infrastructure for the Internet',
+    timestamp: '2025-01-15T10:30:00.000Z',
+    elementCount: 3842,       // DOM elements evaluated
+    pagesAnalyzed: 1,         // increases with --depth
+  },
+  colors: { primary, secondary, accent, neutrals, backgrounds, text, gradients, all },
+  typography: { families, scale, headings, body, weights },
+  spacing: { base, scale, tokens, raw },
+  shadows: { values, ... },
+  borders: { radii, ... },
+  variables: { colors, spacing, typography, shadows, radii, other },
+  breakpoints: [ ... ],
+  animations: { transitions, keyframes },
+  components: { buttons, cards, inputs, ... },
+  accessibility: { score, passCount, failCount, totalPairs, pairs },
+  layout: { gridCount, flexCount, gridColumns, flexDirections, containerWidths, gaps },
+  gradients: { gradients, count },
+  zIndex: { ... },
+  icons: { icons, count },
+  fonts: { fonts, systemFonts },
+  images: { patterns, aspectRatios },
+  score: { overall, grade, scores, issues, strengths },
+  darkMode: { colors, variables },   // only present when dark: true
+}
+```
+
+<Note>
+  `darkMode` is only included in the result when you pass `dark: true` in the options. It contains a second pass of color and CSS variable extraction with the browser's `colorScheme` set to `dark`.
+</Note>

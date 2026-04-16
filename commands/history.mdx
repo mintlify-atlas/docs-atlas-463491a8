@@ -1,0 +1,84 @@
+---
+title: "designlang history — track design changes over time"
+description: "designlang history <url> shows a timeline of design snapshots captured for a website, letting you see how the design system evolved over time."
+---
+
+`designlang history` reads the local snapshot log for a given URL and prints a timeline of every extraction ever run against that site. It is a quick way to answer "when did their primary color change?" or "has the accessibility score improved since we last checked?"
+
+## Usage
+
+```bash
+designlang history <url>
+```
+
+There are no options. The command reads from the local history store and prints to stdout.
+
+## How snapshots are saved
+
+Every time you run `designlang <url>`, `designlang sync`, or `designlang watch`, a compact snapshot is automatically appended to `~/.designlang/<hostname>.json`. The snapshot records:
+
+- Extraction timestamp
+- Primary, secondary, and accent colors
+- Font families and type scale size
+- Spacing base and scale count
+- Shadow and border radius counts
+- Component patterns detected
+- Accessibility score
+- CSS variable count
+
+Snapshots are intentionally compact — they store key metrics only, not the full extracted design data. This keeps the history file small even after hundreds of runs.
+
+## Skipping history
+
+Pass `--no-history` to the main `extract` command to run an extraction without saving a snapshot:
+
+```bash
+designlang https://stripe.com --no-history
+```
+
+This is useful in CI pipelines where you want the output files but don't want to accumulate snapshots.
+
+## Where snapshots are stored
+
+History is stored per-hostname in your home directory:
+
+```text
+~/.designlang/
+  stripe.com.json
+  vercel.com.json
+  github.com.json
+```
+
+Each file is a JSON array of snapshot objects, sorted oldest-first. You can inspect or delete individual files directly if you need to reset history for a site.
+
+## What the history output shows
+
+`designlang history` prints a markdown-formatted timeline to stdout. For each snapshot it shows the date, color count, primary color, font families, spacing scale size, accessibility score, and CSS variable count. If two or more snapshots exist, it also prints a "Changes Over Time" summary highlighting anything that shifted between the first and most recent snapshot:
+
+```bash
+designlang history https://stripe.com
+```
+
+```markdown
+# Design History: stripe.com
+
+5 snapshots recorded.
+
+| Date       | Colors | Fonts | Spacing | A11y | CSS Vars |
+|------------|--------|-------|---------|------|----------|
+| 4/10/2026  | 31 (primary: `#635bff`) | Inter | 14 vals | 94%  | 312      |
+| 4/11/2026  | 31 (primary: `#635bff`) | Inter | 14 vals | 94%  | 312      |
+| 4/12/2026  | 33 (primary: `#635bff`) | Inter | 14 vals | 91%  | 318      |
+| 4/14/2026  | 33 (primary: `#5851e5`) | Inter, Inter Display | 15 vals | 91% | 324 |
+| 4/16/2026  | 33 (primary: `#5851e5`) | Inter, Inter Display | 15 vals | 91% | 324 |
+
+## Changes Over Time
+
+- **Color count:** 31 → 33
+- **Fonts changed:** Inter → Inter, Inter Display
+- **A11y score:** 94% → 91%
+```
+
+<Note>
+  The history command reads exclusively from the local snapshot file. It does not make any network requests or launch a browser.
+</Note>

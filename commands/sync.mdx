@@ -1,0 +1,93 @@
+---
+title: "designlang sync — keep tokens in sync with live site"
+description: "Treat the deployed site as your source of truth — sync detects design changes and auto-updates your local tokens, Tailwind config, and CSS variables."
+---
+
+`designlang sync` treats the deployed site as the authoritative source of design truth. On every run it extracts the current design, compares it against the previous snapshot saved in `~/.designlang/`, reports any differences, and rewrites your local token files to reflect the latest values.
+
+## Usage
+
+```bash
+designlang sync <url> [options]
+```
+
+## Options
+
+<ParamField path="--out" type="string" default=".">
+  Directory containing the token files you want updated. `sync` looks for `design-tokens.json`, `tailwind.config.js`, and `variables.css` in this directory and rewrites any it finds. Files that don't exist are skipped — `sync` never creates new files.
+</ParamField>
+
+## How sync works
+
+<Steps>
+  <Step title="First run — save the baseline">
+    On the very first run against a URL, `sync` extracts the design and saves a compact snapshot to `~/.designlang/<hostname>.json`. The snapshot records key metrics: primary and secondary colors, font families, color count, and accessibility score.
+
+    ```
+      designlang sync
+      https://stripe.com
+
+      ✓ First sync — baseline saved.
+    ```
+  </Step>
+  <Step title="Subsequent runs — detect changes">
+    On every run after the first, `sync` compares the freshly extracted design against the saved snapshot. Any change to primary color, secondary color, font families, total color count, or accessibility score is surfaced as a diff:
+
+    ```
+      designlang sync
+      https://stripe.com
+
+      ✓ 2 design changes detected!
+
+        ≠ primary: #635bff → #5851e5
+        ≠ fonts: Inter → Inter, Inter Display
+    ```
+  </Step>
+  <Step title="Rewrite local token files">
+    After diffing, `sync` regenerates and overwrites any token files it finds in the `--out` directory. The rewrite uses the same formatters as the main `extract` command, so the output format is identical.
+
+    ```
+      Updated files:
+      ✓ design-tokens.json
+      ✓ tailwind.config.js
+      ✓ variables.css
+    ```
+  </Step>
+</Steps>
+
+## What gets updated
+
+`sync` only rewrites files that already exist in the output directory. It checks for:
+
+| File | Formatter used |
+|------|----------------|
+| `design-tokens.json` | W3C Design Tokens format |
+| `tailwind.config.js` | Tailwind `theme.extend` config |
+| `variables.css` | CSS custom properties |
+
+<Note>
+  `sync` never creates files that don't exist. Run `designlang <url> --out ./src/tokens` first to generate the initial set, then use `sync` to keep them up to date.
+</Note>
+
+## Example — syncing a token directory
+
+```bash
+# Generate initial tokens
+designlang https://stripe.com --out ./src/tokens
+
+# Later, sync to pick up any design changes on the live site
+designlang sync https://stripe.com --out ./src/tokens
+```
+
+If nothing has changed:
+
+```text
+  designlang sync
+  https://stripe.com
+
+  ✓ No design changes detected.
+```
+
+<Tip>
+  Run `designlang sync` in CI on a schedule (e.g., a weekly GitHub Actions cron job) to automatically open a PR when upstream design tokens drift from your local files.
+</Tip>

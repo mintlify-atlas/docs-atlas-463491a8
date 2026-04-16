@@ -1,0 +1,71 @@
+---
+title: "designlang watch — monitor site for design changes"
+description: "designlang watch <url> periodically checks a website for design changes and alerts you when colors, fonts, or accessibility scores are updated."
+---
+
+`designlang watch` runs an extraction on a schedule and alerts you whenever the live site's design deviates from the saved baseline. It is useful for tracking competitors, monitoring your own staging environment, or getting notified when a third-party design system your product depends on ships updates.
+
+## Usage
+
+```bash
+designlang watch <url> [options]
+```
+
+## Options
+
+<ParamField path="--interval" type="number" default="60">
+  How often to check the site, in minutes. The default is 60 minutes (once per hour). Lower values increase accuracy at the cost of more browser launches and network requests.
+</ParamField>
+
+## What changes are detected
+
+`watch` compares the following properties against the previous snapshot on each check:
+
+- **Primary color** — the dominant brand color extracted from the site
+- **Secondary color** — the second most prominent color
+- **Color count** — total number of unique colors; a large shift often signals a redesign
+- **Font families** — the set of typeface names in use
+- **Accessibility score** — WCAG 2.1 contrast pass rate as a percentage
+- **Spacing base unit** — the base px value of the spacing scale
+- **CSS variable count** — a change of more than 10 custom properties triggers an alert
+
+## Example terminal output
+
+```bash
+designlang watch https://stripe.com --interval 30
+```
+
+```text
+  designlang watch
+  https://stripe.com (every 30min)
+
+  ✓ Baseline captured. Watching for changes...
+
+  Next check in 30 minutes. Press Ctrl+C to stop.
+```
+
+When a change is detected on a subsequent check:
+
+```text
+  ⚠ 2 changes detected!
+    ≠ Primary color: #635bff → #5851e5
+    ≠ A11y score: 94% → 89%
+```
+
+When nothing has changed:
+
+```text
+  ✓ No changes — 14:32:07
+```
+
+## Stopping the watcher
+
+Press `Ctrl+C` at any time to stop the watcher. The process exits cleanly and the history file is not affected.
+
+<Warning>
+  `watch` launches a headless Chromium browser on every check. Running it with a very short interval (e.g., `--interval 1`) against external sites is resource-intensive and may look like automated scraping. Use short intervals only in development environments or against sites you control.
+</Warning>
+
+<Tip>
+  Snapshots saved by `watch` are the same format used by `designlang history`. After a monitoring period, run `designlang history <url>` to see a timeline of every change detected.
+</Tip>

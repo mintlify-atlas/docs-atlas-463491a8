@@ -1,0 +1,153 @@
+---
+title: "Troubleshooting designlang common issues"
+description: "Solutions for common designlang problems — Playwright installation errors, extraction failures, blank output, slow crawling, and Node.js version issues."
+---
+
+Most designlang problems fall into one of a handful of categories: missing browser binaries, sites that need extra time to render, Node.js version mismatches, or sites that actively block automated requests. This page covers every common issue and how to resolve it.
+
+<Warning>
+  designlang requires **Node.js 18 or later** and a Playwright Chromium installation. If you skip either requirement, extraction will fail immediately. Check both before troubleshooting anything else.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title='"Playwright is not installed" error'>
+    **Symptom:** The extraction fails immediately with a message like:
+
+    ```
+      Playwright is not installed.
+      Run: npx playwright install chromium
+    ```
+
+    **Cause:** designlang uses Playwright to launch a headless Chromium browser. The `playwright` package is installed as a dependency, but the browser binary must be downloaded separately.
+
+    **Fix:** Run the following command once after installation:
+
+    ```bash
+    npx playwright install chromium
+    ```
+
+    If you are in a CI environment or restricted network, use `--with-deps` to also install system dependencies:
+
+    ```bash
+    npx playwright install chromium --with-deps
+    ```
+
+    The `postinstall` script in `package.json` attempts this automatically on global install, but it may be suppressed in some environments.
+  </Accordion>
+
+  <Accordion title="Extraction fails or returns empty tokens on SPAs">
+    **Symptom:** The extraction completes but the output files contain few or no tokens — empty color palettes, no font families, minimal spacing values.
+
+    **Cause:** Single-page applications (React, Vue, Angular, Next.js) render content asynchronously. designlang extracts styles after the network reaches idle, but some SPAs continue rendering after that point.
+
+    **Fix:** Use `--wait` to add a delay (in milliseconds) after network idle before extracting:
+
+    ```bash
+    designlang https://app.example.com --wait 2000
+    ```
+
+    Start with 1000–2000ms and increase if the output is still sparse. For very slow-loading sites, `--wait 3000` or higher may be necessary.
+  </Accordion>
+
+  <Accordion title="Empty or incomplete design tokens">
+    **Symptom:** Some token categories are present but others are missing — for example, colors are extracted but no typography or spacing is found.
+
+    **Cause:** The root URL may not contain enough elements to represent the full design system. Many design tokens only appear on inner pages (component libraries, dashboards, etc.).
+
+    **Fix:** Use `--depth` to crawl additional internal pages:
+
+    ```bash
+    designlang https://example.com --depth 3
+    ```
+
+    This visits up to 3 internal links discovered from the root page and aggregates tokens across all of them, giving a much more complete picture of the site-wide design system.
+  </Accordion>
+
+  <Accordion title="Node.js version error">
+    **Symptom:** The CLI exits immediately with a Node.js version error, or you see syntax errors related to ES module syntax.
+
+    **Cause:** designlang uses ES modules (`"type": "module"` in `package.json`) and requires Node.js 18 or later. Older Node.js versions do not support the ESM features used.
+
+    **Fix:** Upgrade Node.js to version 18 or later. Check your current version:
+
+    ```bash
+    node --version
+    ```
+
+    Use [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions:
+
+    ```bash
+    nvm install 20
+    nvm use 20
+    ```
+  </Accordion>
+
+  <Accordion title="Site blocks scraping or returns a captcha">
+    **Symptom:** The extraction completes but returns a design that doesn't match the real site — or you see a captcha/bot-detection page in the output.
+
+    **Cause:** Some sites detect headless browser fingerprints and serve a challenge page instead of the real content.
+
+    **Fix 1:** Set a realistic User-Agent header:
+
+    ```bash
+    designlang https://example.com \
+      --header "User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    ```
+
+    **Fix 2:** For authenticated pages, pass session cookies from a real browser session:
+
+    ```bash
+    designlang https://app.example.com \
+      --cookie "session=your_session_token" \
+      --cookie "cf_clearance=cloudflare_token"
+    ```
+
+    Copy cookie values from your browser's DevTools → Application → Cookies after logging in manually.
+  </Accordion>
+
+  <Accordion title="Extraction is very slow">
+    **Symptom:** The extraction takes several minutes. The spinner shows "Crawling..." for a long time.
+
+    **Cause 1:** `--depth` is set to a high value, causing many pages to be crawled sequentially.
+
+    **Cause 2:** `--screenshots`, `--responsive`, or `--interactions` are enabled, each requiring additional browser launches.
+
+    **Fix:** Reduce the scope of the extraction:
+
+    ```bash
+    # Crawl only the root page, no screenshots
+    designlang https://example.com --depth 0
+
+    # Use --full only when you need the complete capture
+    designlang https://example.com  # omit --full for a fast baseline
+    ```
+
+    For a quick color and typography check, a depth-0 extraction with no extra captures typically completes in 5–15 seconds.
+  </Accordion>
+
+  <Accordion title="Wrong or inconsistent design tokens extracted">
+    **Symptom:** Extracted colors or typography don't match what you see in the browser. Values look stale or reflect a pre-render state.
+
+    **Cause:** The page is still loading styles when the extraction runs — common on sites that load fonts asynchronously or apply theme variables after initial render.
+
+    **Fix:** Increase `--wait` to give the page more time to finish applying all styles:
+
+    ```bash
+    designlang https://example.com --wait 2000
+    ```
+
+    If the site uses a CSS-in-JS library that injects styles after hydration, a wait of 2000–3000ms is usually sufficient.
+
+    Also verify you are targeting the right URL. Marketing landing pages often use a different design system than the product application at `/app` or `/dashboard`.
+  </Accordion>
+</AccordionGroup>
+
+## Still stuck?
+
+If none of the above resolves your issue, run with `--verbose` to see detailed extraction progress:
+
+```bash
+designlang https://example.com --verbose
+```
+
+Then [open an issue](https://github.com/Manavarya09/design-extract/issues) with the verbose output, the URL (if public), and your Node.js version (`node --version`).

@@ -1,0 +1,258 @@
+---
+title: "Output format details and customization"
+description: "What each of designlang's 8 output formats contains, how to select specific formats, and how to use them in Tailwind, Figma, shadcn/ui, and React projects."
+---
+
+Every `designlang` extraction produces up to 8 output files, each targeting a different workflow. This page explains exactly what each format contains and how to drop it into your project.
+
+## The 8 output formats
+
+| File | Format | Primary use |
+|------|--------|-------------|
+| `*-design-language.md` | Markdown | Feed to an LLM or design brief |
+| `*-design-tokens.json` | W3C Design Tokens | Design tooling, token pipelines |
+| `*-tailwind.config.js` | JavaScript | Tailwind CSS projects |
+| `*-variables.css` | CSS | Any CSS-based project |
+| `*-preview.html` | HTML | Visual inspection in the browser |
+| `*-figma-variables.json` | JSON | Figma Variables import |
+| `*-theme.js` | JavaScript | React/CSS-in-JS (Chakra, Stitches) |
+| `*-shadcn-theme.css` | CSS | shadcn/ui `globals.css` |
+
+---
+
+## Markdown — AI-optimized design document
+
+The markdown file (`*-design-language.md`) is structured specifically for LLM consumption. It opens with a metadata header and then covers **19 sections**:
+
+1. Color Palette (primary, secondary, accent, neutrals, backgrounds, text colors)
+2. Gradients
+3. Full Color Inventory
+4. Typography (font families, type scale, heading scale, body text, weights)
+5. Spacing (base unit + token table)
+6. Border Radii
+7. Box Shadows
+8. CSS Custom Properties (grouped by category)
+9. Breakpoints
+10. Transitions & Animations (easings, durations, keyframes)
+11. Component Patterns (with full CSS snippets for each)
+12. Layout System (grids, flex, container widths, gap values)
+13. Responsive Design (viewport snapshots, breakpoint change map)
+14. Interaction States (button hover/focus, link hover, input focus)
+15. Accessibility (WCAG 2.1 — passing and failing color pairs)
+16. Dark Mode (when `--dark` is used)
+17. Z-Index Map
+18. SVG Icons
+19. Font Files, Image Style Patterns, and Quick Start
+
+<Tip>
+  Paste the markdown file into Claude, GPT-4o, or any capable LLM with the prompt "Recreate this design in [framework]" to get a working implementation in seconds.
+</Tip>
+
+---
+
+## W3C Design Tokens JSON
+
+`*-design-tokens.json` follows the [W3C Design Tokens Community Group format](https://design-tokens.github.io/community-group/format/), with each token having a `$value` and `$type` field:
+
+```json
+{
+  "color": {
+    "primary":    { "$value": "#635bff", "$type": "color" },
+    "secondary":  { "$value": "#0a2540", "$type": "color" },
+    "neutral-0":  { "$value": "#f6f9fc", "$type": "color" }
+  },
+  "fontFamily": {
+    "sans": { "$value": "Inter", "$type": "fontFamily" }
+  },
+  "spacing": {
+    "xs": { "$value": "4px",  "$type": "dimension" },
+    "sm": { "$value": "8px",  "$type": "dimension" },
+    "md": { "$value": "16px", "$type": "dimension" }
+  },
+  "shadow": {
+    "sm": { "$value": "0 1px 3px rgba(0,0,0,0.12)", "$type": "shadow" }
+  }
+}
+```
+
+This format is compatible with [Style Dictionary](https://amzn.github.io/style-dictionary/), [Token Pipeline](https://tokenpipeline.io/), and any tool that supports the W3C spec.
+
+---
+
+## Tailwind config
+
+`*-tailwind.config.js` is a drop-in Tailwind CSS theme extension. Merge it with your existing config using the `extend` key:
+
+<Tabs>
+  <Tab title="Use as-is">
+    ```js
+    // Replace or create tailwind.config.js
+    // The file is already structured as an extend config:
+    /** @type {import('tailwindcss').Config} */
+    export default {
+      theme: {
+        extend: {
+          colors: {
+            primary:    '#635bff',
+            secondary:  '#0a2540',
+            'neutral-50': '#f6f9fc',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          spacing: {
+            xs: '4px',
+            sm: '8px',
+            md: '16px',
+          },
+          boxShadow: {
+            sm: '0 1px 3px rgba(0,0,0,0.12)',
+          },
+        },
+      },
+    };
+    ```
+  </Tab>
+  <Tab title="Merge with existing config">
+    ```js
+    // Import the extracted theme and spread it into your own config
+    import extractedTheme from './stripe-com-tailwind.config.js';
+
+    /** @type {import('tailwindcss').Config} */
+    export default {
+      content: ['./src/**/*.{js,ts,jsx,tsx}'],
+      theme: {
+        extend: {
+          ...extractedTheme.theme.extend,
+          // Your overrides here
+        },
+      },
+    };
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## CSS variables
+
+`*-variables.css` contains all extracted custom properties as a `:root` block, ready to import into any stylesheet:
+
+```css
+@import './stripe-com-variables.css';
+```
+
+Or link it in your HTML:
+
+```html
+<link rel="stylesheet" href="stripe-com-variables.css" />
+```
+
+The file groups variables by category (colors, spacing, typography, shadows, etc.) using CSS comments, making it easy to identify and override specific groups.
+
+---
+
+## HTML preview
+
+`*-preview.html` is a self-contained visual report. Open it in any browser — no server required. It includes:
+
+- Color swatches for every extracted color, grouped by role
+- Full typography scale with live type specimens
+- Shadow gallery with labels and CSS values
+- Border radius preview
+- Spacing scale visualization
+- Accessibility score and failing color pairs (color-coded by severity)
+- Design system score breakdown
+
+---
+
+## Figma variables
+
+`*-figma-variables.json` can be imported directly into Figma using the [Variables Import plugin](https://www.figma.com/community/plugin/1253443421698763028). It includes:
+
+- Color variables for primary, secondary, accent, neutrals, backgrounds, and text colors
+- Dark mode variants when `--dark` is used, mapped as separate modes on the same variable collection
+- Spacing tokens as number variables
+
+<Steps>
+  <Step title="Open Figma">
+    Open the file where you want to import the variables.
+  </Step>
+  <Step title="Install the plugin">
+    Install "Variables Import" from the Figma Community if not already installed.
+  </Step>
+  <Step title="Import the JSON">
+    Run the plugin, select the generated `*-figma-variables.json` file, and confirm the import.
+  </Step>
+</Steps>
+
+---
+
+## React theme (theme.js)
+
+`*-theme.js` exports a plain JavaScript object compatible with Chakra UI, Stitches, Vanilla Extract, and any CSS-in-JS library that accepts a theme object:
+
+<Tabs>
+  <Tab title="Chakra UI">
+    ```js
+    import { extendTheme } from '@chakra-ui/react';
+    import extractedTheme from './stripe-com-theme.js';
+
+    const theme = extendTheme(extractedTheme);
+    export default theme;
+    ```
+  </Tab>
+  <Tab title="Stitches">
+    ```js
+    import { createStitches } from '@stitches/react';
+    import theme from './stripe-com-theme.js';
+
+    export const { styled, css } = createStitches({ theme });
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## shadcn/ui theme
+
+`*-shadcn-theme.css` contains CSS variable declarations formatted for shadcn/ui's `globals.css` convention, with both light and dark mode blocks:
+
+```css
+/* Paste into your globals.css */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 246 89% 68%;
+    --primary-foreground: 210 40% 98%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --primary: 246 89% 68%;
+  }
+}
+```
+
+---
+
+## Selecting specific output formats
+
+Use `--framework` to limit framework-specific output:
+
+```bash
+# Only generate the shadcn/ui theme
+designlang https://stripe.com --framework shadcn
+
+# Only generate the React theme
+designlang https://stripe.com --framework react
+```
+
+When `--framework` is omitted, both `*-theme.js` and `*-shadcn-theme.css` are generated alongside the other six formats.
+
+<Note>
+  The six core formats (markdown, tokens JSON, Tailwind config, CSS variables, HTML preview, Figma variables) are always generated regardless of `--framework`.
+</Note>

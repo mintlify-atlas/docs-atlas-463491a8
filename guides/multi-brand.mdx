@@ -1,0 +1,114 @@
+---
+title: "Compare design systems across multiple brands"
+description: "Use designlang's brands command to compare design systems from multiple sites — color overlap, typography, spacing, and accessibility scores in one matrix."
+---
+
+When you're building a design system, auditing competitors, or consolidating multiple brand identities, you need to see differences and similarities across sites at a glance. designlang's `brands` command extracts the full design language from each URL you provide and generates a comparison matrix covering colors, typography, spacing systems, accessibility scores, and more. The output includes both a markdown file and an interactive HTML report.
+
+## Run a multi-brand comparison
+
+Pass any number of URLs (with or without `https://`) to the `brands` command:
+
+```bash
+designlang brands stripe.com vercel.com github.com linear.app
+```
+
+designlang extracts each site in sequence and generates two output files:
+
+- `brands.md` — a markdown matrix ready to paste into a document or feed to an LLM
+- `brands.html` — a visual HTML report with color swatches, typography tables, and color overlap analysis
+
+<Note>
+  You can pass bare hostnames like `stripe.com` or full URLs like `https://stripe.com`. designlang normalizes both formats automatically.
+</Note>
+
+## What the matrix includes
+
+The comparison matrix covers the following properties for each brand:
+
+<Steps>
+  <Step title="Color palette">
+    Primary color, secondary color, total color count, and a color overlap analysis showing how many hex values two brands share — useful for spotting common palette patterns across the industry.
+  </Step>
+  <Step title="Typography">
+    Font families in use at each brand, presented in a cross-reference table showing which fonts appear on which sites.
+  </Step>
+  <Step title="Spacing system">
+    The detected spacing base unit (e.g., `4px`, `8px`) for each brand, giving you a quick read on whether a site uses a 4-point, 8-point, or custom grid.
+  </Step>
+  <Step title="Accessibility scores">
+    WCAG 2.1 contrast score (percentage) for each brand. Scores are color-coded in the HTML report: green for ≥80%, yellow for ≥50%, red for below 50%.
+  </Step>
+  <Step title="Component and token counts">
+    Shadow count, border radius values, CSS variable count, and detected component types — giving a structural view of each brand's design system complexity.
+  </Step>
+</Steps>
+
+## Example matrix output
+
+Running `designlang brands stripe.com vercel.com github.com linear.app` produces a matrix like this in `brands.md`:
+
+```markdown
+# Multi-Brand Design Comparison
+
+Comparing 4 brands.
+
+| Property        | stripe.com      | vercel.com      | github.com      | linear.app      |
+| --------------- | --------------- | --------------- | --------------- | --------------- |
+| Primary Color   | `#635bff`       | `#000000`       | `#0969da`       | `#5e6ad2`       |
+| Secondary Color | `#0a2540`       | `#ffffff`       | `#1f883d`       | `#e8e8e8`       |
+| Fonts           | Sohne, Inter    | Geist           | -apple-system   | Inter           |
+| Color Count     | 34              | 27              | 41              | 22              |
+| Spacing Base    | 4px             | 2px             | 4px             | 4px             |
+| A11y Score      | 88%             | 94%             | 91%             | 85%             |
+| Shadows         | 12              | 11              | 8               | 6               |
+| Border Radii    | 9               | 10              | 6               | 5               |
+
+## Color Overlap
+
+**stripe.com vs vercel.com:** 3 shared colors (`#ffffff`, `#000000`, `#f6f6f6`)
+**stripe.com vs github.com:** 2 shared colors (`#ffffff`, `#000000`)
+```
+
+## Two-site diff with the `diff` command
+
+For a more detailed comparison of exactly two sites, use the `diff` command instead:
+
+```bash
+designlang diff stripe.com vercel.com
+```
+
+`diff` produces `diff.md` and `diff.html` with a focused side-by-side view of every design property — more granular than the `brands` matrix, which is optimized for scanning across many sites at once.
+
+<CodeGroup>
+
+```bash Two-brand diff
+designlang diff stripe.com vercel.com
+```
+
+```bash Multi-brand matrix
+designlang brands stripe.com vercel.com github.com linear.app
+```
+
+```bash Multi-brand with custom output directory
+designlang brands stripe.com vercel.com --out ./brand-audit
+```
+
+</CodeGroup>
+
+## HTML report
+
+The `brands.html` output is a self-contained file with:
+
+- A dark-themed data table with all matrix properties
+- Color swatch galleries showing the top 15 colors for each brand (rendered as 32×32px swatches)
+- Accessibility scores color-coded by threshold
+- No external dependencies — open it in any browser
+
+## Error handling
+
+If any URL fails to load during a multi-brand run, designlang records the error and continues with the remaining URLs. The output matrix shows results for all successful extractions and lists errors in a separate section at the end of both output files.
+
+<Note>
+  Multi-brand comparisons extract each site in sequence, so total runtime scales linearly with the number of URLs. A four-brand comparison typically takes 2–4 minutes depending on page complexity and network conditions. Add `--wait <ms>` if any of the target sites are JavaScript-heavy SPAs that need time to settle after load.
+</Note>

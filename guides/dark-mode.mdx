@@ -1,0 +1,120 @@
+---
+title: "Extract dark mode design tokens"
+description: "Use designlang's --dark flag to capture both light and dark color schemes from any website, and diff them to see exactly which values change between modes."
+---
+
+Many design systems maintain separate color palettes for light and dark mode, and the tokens that change between them are often the most important ones to capture correctly. designlang's `--dark` flag loads the page twice — once in its default state and once with dark mode activated — then runs a diff to show you exactly which colors and CSS variables are overridden in each scheme.
+
+## Run a dark mode extraction
+
+Pass `--dark` to any extraction command:
+
+```bash
+designlang https://vercel.com --dark
+```
+
+This produces all the standard output files, plus a `darkMode` property in the extracted design object containing the dark scheme's colors, the diff summary, and the list of CSS variables that change value between modes.
+
+## What gets captured
+
+The `--dark` flag triggers two separate browser passes and compares the results using the `diffDarkMode` function in `src/darkdiff.js`. The diff tracks three things:
+
+<Steps>
+  <Step title="Color set changes">
+    Colors that appear only in the dark palette (added in dark) and colors present in light mode that disappear in dark mode (removed in dark). The diff records both sets by hex value.
+  </Step>
+  <Step title="CSS variable overrides">
+    Every CSS variable whose computed value differs between light and dark mode. For each changed variable you get both the light value and the dark value side by side.
+  </Step>
+  <Step title="New dark-only variables">
+    CSS variables that exist in the dark scheme but have no equivalent in the light scheme — common in design systems that layer dark-mode tokens on top of a light-mode base.
+  </Step>
+</Steps>
+
+## Example diff output
+
+After running `designlang https://vercel.com --dark`, the `darkMode` section of the design object looks like this:
+
+```json
+{
+  "darkMode": {
+    "hasChanges": true,
+    "changes": [
+      {
+        "category": "colors",
+        "light": 27,
+        "dark": 31,
+        "added": ["#0a0a0a", "#111111", "#1a1a1a", "#fafafa"],
+        "removed": ["#ffffff", "#f5f5f5"]
+      },
+      {
+        "category": "cssVariables",
+        "changed": [
+          { "name": "--background", "light": "#ffffff", "dark": "#000000" },
+          { "name": "--foreground", "light": "#0a0a0a", "dark": "#ededed" }
+        ],
+        "newInDark": [
+          { "name": "--dark-surface", "light": null, "dark": "#111111" }
+        ]
+      }
+    ],
+    "summary": {
+      "colorsChanged": 6,
+      "variablesChanged": 2,
+      "newDarkVariables": 1
+    }
+  }
+}
+```
+
+## The diff algorithm
+
+The `diffDarkMode` function in `src/darkdiff.js` compares light and dark design objects by:
+
+1. Building two sets of hex values from `colors.all` and finding the symmetric difference
+2. Flattening nested CSS variable groups using `flattenVars()` and walking every key to find changed values
+3. Identifying variables present in the dark object but absent from the light object
+
+```javascript
+// From src/darkdiff.js
+export function diffDarkMode(lightDesign, darkDesign) {
+  const lightColors = new Set(lightDesign.colors.all.map(c => c.hex));
+  const darkColors = new Set(darkDesign.colors.all.map(c => c.hex));
+
+  const addedInDark = darkDesign.colors.all.filter(c => !lightColors.has(c.hex));
+  const removedInDark = lightDesign.colors.all.filter(c => !darkColors.has(c.hex));
+  // ...
+}
+```
+
+## Combine with other flags
+
+The `--dark` flag works alongside any other extraction flag:
+
+<CodeGroup>
+
+```bash Dark mode only
+designlang https://vercel.com --dark
+```
+
+```bash Dark mode with full capture
+designlang https://vercel.com --dark --full
+```
+
+```bash Dark mode with multi-page crawl
+designlang https://vercel.com --dark --depth 3
+```
+
+```bash Dark mode with custom output directory
+designlang https://vercel.com --dark --out ./tokens
+```
+
+</CodeGroup>
+
+## Figma variables output
+
+When `--dark` is active, the `*-figma-variables.json` output includes both light and dark mode collections. This lets you import the file directly into Figma and get a variables set with both modes pre-configured, ready for component theming.
+
+<Note>
+  Dark mode extraction requires the site to support `prefers-color-scheme: dark` or a JavaScript-based theme toggle that designlang can detect. Sites that use only CSS class toggling (e.g., adding `.dark` to `<html>`) may require the `--wait` flag to allow the toggle animation to settle before extraction begins.
+</Note>

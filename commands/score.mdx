@@ -1,0 +1,81 @@
+---
+title: "designlang score — rate design system quality"
+description: "designlang score rates any site's design system across 7 dimensions: color, typography, spacing, shadows, border radii, accessibility, and CSS tokenization."
+---
+
+`designlang score` evaluates how well-constructed a website's design system is. It extracts the full design language and then scores it across seven categories, printing a visual bar chart to the terminal with a numeric score out of 100 and a letter grade from A to F. The output includes a list of specific strengths and actionable issues so you know exactly what to fix — whether that is an inconsistent color palette, missing tokenization, or failing WCAG contrast pairs.
+
+## Usage
+
+```bash
+designlang score <url>
+```
+
+## Scoring categories
+
+<Steps>
+  <Step title="Color discipline">
+    Measures how consistent and intentional the color palette is. A high score means a small, purposeful set of colors; a low score indicates color sprawl with dozens of one-off hex values that suggest missing design tokens.
+  </Step>
+  <Step title="Typography consistency">
+    Evaluates how systematically type is used across the site — checking for a coherent type scale, consistent font families, and predictable weight usage. Sites that use many one-off font sizes score lower.
+  </Step>
+  <Step title="Spacing system">
+    Checks whether spacing values follow a consistent scale (e.g. 4px base unit with multiples). Erratic or arbitrary margin and padding values lower the score.
+  </Step>
+  <Step title="Shadows">
+    Rates shadow consistency. A well-designed system uses a small number of reusable shadow levels; ad-hoc shadows scattered across components reduce the score.
+  </Step>
+  <Step title="Border radii">
+    Measures whether border radius values are drawn from a defined scale. Sites mixing `3px`, `5px`, `7px`, `12px`, and `20px` without a pattern score poorly here.
+  </Step>
+  <Step title="Accessibility (WCAG 2.1)">
+    Calculates contrast ratios for all foreground/background color pairs found on the page and reports the percentage that pass WCAG 2.1 AA. This category is scored out of 100 and fails are listed individually.
+  </Step>
+  <Step title="Tokenization">
+    Checks how much of the design is expressed through CSS custom properties. A fully tokenized site where every color, font, radius, and shadow is a variable scores 100; sites with no CSS variables score 0.
+  </Step>
+</Steps>
+
+## Overall score and grade
+
+The seven category scores are weighted and combined into a single score from 0 to 100. Letter grades follow standard academic thresholds:
+
+| Score | Grade |
+|-------|-------|
+| 90–100 | A |
+| 80–89 | B |
+| 70–79 | C |
+| 60–69 | D |
+| 0–59 | F |
+
+## Terminal output example
+
+```
+  Design System Score
+  https://vercel.com
+
+    68/100  Grade: D
+
+  Color Discipline     ██████████░░░░░░░░░░ 50
+  Typography           ██████████████░░░░░░ 70
+  Spacing System       ████████████████░░░░ 80
+  Shadows              ██████████░░░░░░░░░░ 50
+  Border Radii         ████████░░░░░░░░░░░░ 40
+  Accessibility        ███████████████████░ 94
+  Tokenization         ████████████████████ 100
+
+  Strengths:
+  ✓ Excellent WCAG accessibility score
+  ✓ Fully tokenized with CSS custom properties
+
+  Issues:
+  ! High color count — consider consolidating to a token palette
+  ! Shadow values are inconsistent across components
+  ! Border radius values do not follow a consistent scale
+  ! Color palette has too many one-off values
+```
+
+<Info>
+  The design score is also included automatically in the summary printed at the end of every `designlang <url>` extraction, so you get scoring without running a separate command.
+</Info>

@@ -1,0 +1,87 @@
+---
+title: "designlang: reverse-engineer any website's design system"
+description: "designlang reverse-engineers any website's design system — colors, typography, spacing, shadows, and more — outputting 8 ready-to-use files in one command."
+---
+
+designlang is a CLI tool that reverse-engineers the design system of any live website. Point it at a URL and it produces 8 ready-to-use output files: AI-optimized markdown, W3C design tokens, Tailwind config, CSS custom properties, Figma variables, React theme, shadcn/ui theme, and a visual HTML preview.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Extract your first design system in under a minute
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Install globally or run with npx — no config needed
+  </Card>
+  <Card title="Command Reference" icon="terminal" href="/commands/extract">
+    Every command, flag, and option documented with examples
+  </Card>
+  <Card title="Agent Skill" icon="robot" href="/guides/agent-skill">
+    Use designlang inside Claude Code and 40+ AI coding agents
+  </Card>
+</CardGroup>
+
+## What designlang extracts
+
+Run `npx designlang https://stripe.com` and get a complete snapshot of that site's design language — including properties most tools miss entirely:
+
+<CardGroup cols={2}>
+  <Card title="Colors & typography" icon="palette">
+    All unique colors clustered by role, full type scale, font families, and WCAG accessibility scores
+  </Card>
+  <Card title="Spacing & layout" icon="ruler">
+    Spacing scale, grid column patterns, flex container usage, container widths, and gap values
+  </Card>
+  <Card title="Shadows, radii & borders" icon="square">
+    Every unique box shadow, border radius, and border style with usage context
+  </Card>
+  <Card title="Responsive behavior" icon="mobile">
+    How the design adapts across 4 viewports — what changes and at which breakpoints
+  </Card>
+  <Card title="Interaction states" icon="cursor-arrow-rays">
+    Hover, focus, and active state transitions captured by programmatically triggering them
+  </Card>
+  <Card title="Design scoring" icon="chart-bar">
+    7-category quality rating (A–F) covering color discipline, tokenization, and accessibility
+  </Card>
+</CardGroup>
+
+## Get started in 30 seconds
+
+<Steps>
+  <Step title="Run the extractor">
+    No install required — npx pulls the latest version automatically.
+
+    ```bash
+    npx designlang https://stripe.com
+    ```
+  </Step>
+  <Step title="Get everything at once">
+    Add `--full` to also capture screenshots, responsive breakpoints, and interaction states.
+
+    ```bash
+    npx designlang https://stripe.com --full
+    ```
+  </Step>
+  <Step title="Use the output">
+    Drop the generated files directly into your project — Tailwind config, CSS variables, Figma variables, and more are all ready to use.
+  </Step>
+</Steps>
+
+## Output files
+
+Every extraction produces 8 files:
+
+| File | Description |
+|------|-------------|
+| `*-design-language.md` | AI-optimized markdown — feed to any LLM to recreate the design |
+| `*-preview.html` | Visual report with color swatches, type scale, shadow gallery, and a11y score |
+| `*-design-tokens.json` | [W3C Design Tokens](https://design-tokens.github.io/community-group/format/) format |
+| `*-tailwind.config.js` | Drop-in Tailwind CSS theme extension |
+| `*-variables.css` | CSS custom properties |
+| `*-figma-variables.json` | Figma Variables import with dark mode support |
+| `*-theme.js` | React/CSS-in-JS theme for Chakra, Stitches, Vanilla Extract |
+| `*-shadcn-theme.css` | shadcn/ui `globals.css` variables |
+
+<Note>
+  Want to use designlang inside an AI coding agent? See the [Agent Skill guide](/guides/agent-skill) — it works with Claude Code, Cursor, Codex, and 40+ other agents via the skills ecosystem.
+</Note>

@@ -1,0 +1,101 @@
+---
+title: "designlang brands — multi-brand comparison"
+description: "Compare design languages across multiple websites — colors, typography, spacing, and accessibility scores in a side-by-side matrix with brands <urls...>."
+---
+
+`designlang brands` extracts the design language from every URL you pass and renders the results in a single side-by-side matrix. It is the fastest way to understand how a set of competing products — or your own brand family — differ in color palette, typography choices, spacing discipline, and accessibility compliance.
+
+## Usage
+
+```bash
+designlang brands <urls...> [options]
+```
+
+Pass two or more URLs as positional arguments. Bare hostnames are accepted; the `https://` prefix is added automatically.
+
+## Options
+
+<ParamField path="--out" type="string" default="./design-brands-output">
+  Directory where `brands.md` and `brands.html` are written. Created automatically if it does not exist.
+</ParamField>
+
+## What the matrix includes
+
+The comparison matrix covers the following properties for each site:
+
+- **Primary and secondary colors** — hex values with inline color swatches in the HTML report
+- **Font families** — all detected typefaces, with a cross-brand table showing which fonts are shared
+- **Color count** — total unique colors extracted from each site
+- **Spacing base unit** — the base px value the spacing scale is built on
+- **Accessibility score** — WCAG 2.1 contrast ratio pass rate as a percentage
+- **Shadows and border radii** — count of unique values
+- **CSS variable count** — total custom properties defined
+- **Color overlap analysis** — which exact hex values are shared between each pair of brands
+
+## Output files
+
+<CardGroup cols={2}>
+  <Card title="brands.md" icon="file-lines">
+    Markdown matrix with the full comparison table, color overlap analysis, and a typography cross-reference table. Suitable for feeding to an LLM or pasting into a design brief.
+  </Card>
+  <Card title="brands.html" icon="globe">
+    Visual HTML report with color swatches, per-brand full palettes (up to 15 colors each), and color-coded accessibility scores.
+  </Card>
+</CardGroup>
+
+## Example
+
+Compare four leading SaaS products with a single command:
+
+```bash
+designlang brands stripe.com vercel.com github.com linear.app
+```
+
+Terminal output after extraction:
+
+```text
+  designlang brands
+  Comparing 4 sites
+
+  ✓ brands.md — Markdown matrix
+  ✓ brands.html — Visual matrix
+
+  Saved to ./design-brands-output
+
+  stripe.com: 31 colors, Inter, 94% a11y
+  vercel.com: 27 colors, Geist, Geist Mono, 94% a11y
+  github.com: 44 colors, -apple-system, 88% a11y
+  linear.app: 22 colors, Inter, 91% a11y
+```
+
+The generated `brands.md` opens with the overview matrix, followed by a color overlap section showing how many hex values are shared between each pair, and then a font cross-reference table:
+
+```markdown
+# Multi-Brand Design Comparison
+
+Comparing 4 brands.
+
+| Property       | stripe.com | vercel.com | github.com | linear.app |
+| -------------- | ---------- | ---------- | ---------- | ---------- |
+| Primary Color  | `#635bff`  | `#000000`  | `#0969da`  | `#5e6ad2`  |
+| Fonts          | Inter      | Geist      | -apple-system | Inter   |
+| A11y Score     | 94%        | 94%        | 88%        | 91%        |
+| Color Count    | 31         | 27         | 44         | 22         |
+
+## Color Overlap
+
+**stripe.com vs vercel.com:** 3 shared colors (`#ffffff`, `#000000`, `#f6f6f6`)
+**stripe.com vs github.com:** 5 shared colors (`#ffffff`, `#000000`, ...)
+
+## Typography Comparison
+
+| Font            | stripe.com | vercel.com | github.com | linear.app |
+| --------------- | ---------- | ---------- | ---------- | ---------- |
+| Inter           | Yes        | -          | -          | Yes        |
+| Geist           | -          | Yes        | -          | -          |
+| -apple-system   | -          | -          | Yes        | -          |
+```
+
+<Tip>
+  Pass `--out ./reports/brands` to write the output to a specific directory, making it easy to version-control brand comparison snapshots alongside your design system.
+</Tip>

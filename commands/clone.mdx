@@ -1,0 +1,108 @@
+---
+title: "designlang clone — generate a Next.js starter"
+description: "designlang clone scaffolds a Next.js 15 starter app with extracted colors, fonts, spacing, and Tailwind CSS v4 config derived from any website's design system."
+---
+
+`designlang clone` takes the design system from any website and scaffolds a fully functional Next.js 15 application with the extracted values baked in. The generated app uses Tailwind CSS v4, includes a demo page showing the color palette, typography scale, and card components, and is ready to run with a single `npm install`. Use it to bootstrap a new project that matches a reference site's visual language, or to prototype a redesign before touching your actual codebase.
+
+## Usage
+
+```bash
+designlang clone <url> [options]
+```
+
+## Options
+
+<ParamField path="--out" type="string" default="./cloned-design">
+  Directory where the generated Next.js project will be written. Alias: `-o`.
+</ParamField>
+
+## What gets generated
+
+The command produces a self-contained Next.js project with all design values derived from the extracted site:
+
+<Tree>
+  <Tree.Folder name="cloned-design" defaultOpen>
+    <Tree.File name="package.json" />
+    <Tree.File name="next.config.mjs" />
+    <Tree.File name="postcss.config.mjs" />
+    <Tree.Folder name="src" defaultOpen>
+      <Tree.Folder name="app" defaultOpen>
+        <Tree.File name="globals.css" />
+        <Tree.File name="layout.js" />
+        <Tree.File name="page.js" />
+      </Tree.Folder>
+    </Tree.Folder>
+    <Tree.Folder name="public" />
+  </Tree.Folder>
+</Tree>
+
+| File | Contents |
+|------|----------|
+| `package.json` | Next.js 15, React 19, Tailwind CSS v4 |
+| `src/app/globals.css` | Extracted colors, fonts, radii, and shadows as CSS custom properties |
+| `src/app/layout.js` | Root layout loading the detected Google Font |
+| `src/app/page.js` | Demo page with hero, color palette, typography scale, and card grid |
+| `next.config.mjs` | Minimal Next.js config |
+| `postcss.config.mjs` | Tailwind CSS v4 PostCSS plugin |
+
+The `globals.css` file is generated from the live extracted values:
+
+```css
+:root {
+  --color-primary: #0070f3;
+  --color-secondary: #7928ca;
+  --color-accent: #ff0080;
+  --color-background: #ffffff;
+  --color-foreground: #171717;
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --radius: 8px;
+  --shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+```
+
+## Running the cloned app
+
+<Steps>
+  <Step title="Clone the design">
+    ```bash
+    designlang clone https://vercel.com
+    ```
+
+    The command extracts the design and writes the project to `./cloned-design`.
+  </Step>
+  <Step title="Install dependencies">
+    ```bash
+    cd cloned-design && npm install
+    ```
+  </Step>
+  <Step title="Start the development server">
+    ```bash
+    npm run dev
+    ```
+
+    Open `http://localhost:3000` to see the running app with the extracted design applied.
+  </Step>
+</Steps>
+
+## Example output
+
+```
+  designlang clone
+  https://vercel.com
+
+  ✓ package.json
+  ✓ src/app/globals.css
+  ✓ src/app/layout.js
+  ✓ src/app/page.js
+  ✓ next.config.mjs
+  ✓ postcss.config.mjs
+
+  To run:
+  cd ./cloned-design && npm install && npm run dev
+```
+
+<Tip>
+  Use `--out` to name the output directory after the project you are building, so you can clone multiple designs side by side for comparison.
+</Tip>

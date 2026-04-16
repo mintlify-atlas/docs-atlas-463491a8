@@ -1,0 +1,83 @@
+---
+title: "Design property extractors reference"
+description: "designlang uses 19 specialized extractors to pull colors, typography, spacing, shadows, layout, accessibility, gradients, icons, and more from live websites."
+---
+
+After the crawler returns raw computed styles, designlang passes that data through 19 extractor modules. Each module is responsible for exactly one property domain. Most run automatically on every extraction; two — `responsive` and `interactions` — require explicit flags because they open additional browser sessions. The results of all extractors are assembled into the unified `design` object returned by `extractDesignLanguage`.
+
+## Extractor categories
+
+<CardGroup cols={2}>
+  <Card title="Colors" icon="palette">
+    Parses `color`, `backgroundColor`, and `borderColor` from every element. Clusters all unique colors into up to 15 representative swatches using perceptual distance, then classifies them into chromatic (primary, secondary, accent) and neutral buckets. Also identifies background colors from large-area elements and text colors from the `color` property. Returns hex, RGB, and HSL values for each cluster.
+  </Card>
+  <Card title="Typography" icon="type">
+    Extracts font families ranked by usage frequency, classifying each as heading, body, or all-purpose based on which HTML tags it appears on. Builds a complete type scale from unique font sizes, annotated with the weight, line height, letter spacing, and HTML tags associated with each size. Separately identifies heading sizes (from `h1`–`h6`) and the most common body text size.
+  </Card>
+  <Card title="Spacing" icon="arrows-up-down">
+    Collects all padding, margin, and gap values across every element, rounds them to whole pixels, and removes duplicates. Runs a base-unit detection algorithm to find the smallest common denominator — for example, a base of 4px would mean 8, 16, 24, and 32 are multiples of 4. Returns named tokens (`"2": "8px"`, `"4": "16px"`) when a base is detected, or indexed tokens otherwise.
+  </Card>
+  <Card title="Shadows" icon="shadow">
+    Collects all unique `box-shadow` values that are not `none`, deduplicates them, and returns them as an ordered list. The scoring module uses the shadow count to evaluate elevation-scale consistency.
+  </Card>
+  <Card title="Borders" icon="square">
+    Extracts all unique `border-radius` values. Returns them as a deduplicated list for use in the type scale and for design scoring — fewer unique radii indicates a more disciplined system.
+  </Card>
+  <Card title="CSS variables" icon="code">
+    Reads all CSS custom properties from `:root` and `:host` across all accessible stylesheets. Categorizes them automatically by name pattern into six groups: colors, spacing, typography, shadows, radii, and other. This is the basis for the Figma variables export and the CSS variables output file.
+  </Card>
+  <Card title="Breakpoints" icon="tablet-smartphone">
+    Reads `CSSMediaRule` conditions from all accessible stylesheets and returns the unique set of media query strings. These feed into the breakpoints section of the markdown output.
+  </Card>
+  <Card title="Animations" icon="play">
+    Collects `transition` values from computed styles and `CSSKeyframesRule` definitions from stylesheets. Returns both transition strings and named keyframe objects with their step offsets and CSS text.
+  </Card>
+  <Card title="Components" icon="layout-grid">
+    Identifies recurring UI patterns by matching elements against semantic selectors and class name patterns: buttons (`button`, `[role="button"]`, `.btn`), cards (`.card` or divs with shadow + radius + background), inputs (`input`, `textarea`, `select`), navigation (`nav`, `[role="navigation"]`), badges, links, and headings. For each component type it extracts the most common computed style values as a base style object.
+  </Card>
+  <Card title="Accessibility" icon="accessibility">
+    Calculates WCAG 2.1 relative luminance for every unique foreground/background color pair found across the page and computes the contrast ratio. Applies large-text rules (≥18px or ≥14px bold). Returns a score from 0–100 representing the proportion of element occurrences that pass, plus a sorted list of up to 50 pairs with their ratio and WCAG level (AA, AAA, or FAIL).
+  </Card>
+  <Card title="Layout" icon="layout">
+    Identifies all `display: grid` and `display: flex` elements. For grids, parses `grid-template-columns` to count column patterns. For flex containers, records `flex-direction`, `flex-wrap`, `justify-content`, `align-items`, and `gap`. Also detects container elements — large-area elements with a `max-width` constraint — and collects the unique max-width values.
+  </Card>
+  <Card title="Scoring" icon="chart-bar">
+    Runs last, after all other extractors have populated the `design` object. Rates the design across 7 categories (color discipline, typography consistency, spacing system, shadow consistency, border radius consistency, accessibility, and CSS variable tokenization) using thresholds derived from common design system conventions. Returns a 0–100 weighted score, an A–F grade, per-category breakdowns, a list of specific issues, and a list of strengths.
+  </Card>
+  <Card title="Gradients" icon="gradient">
+    Scans `background-image` values for `gradient` functions and deduplicates them. Parses each gradient to extract the type (linear, radial, conic, or repeating variants), direction or angle, and color stops with positions. Classifies gradients as subtle (2 stops), brand (2 stops with distinct colors), bold (3–4 stops), or complex (5+ stops).
+  </Card>
+  <Card title="Z-index" icon="layers">
+    Collects all `z-index` values from computed styles, groups them into semantic layers (base, sticky, dropdown, modal, and so on), and flags values above 9999 as potential z-index wars. Returns a map of layers with their associated z-index ranges and element counts.
+  </Card>
+  <Card title="Icons" icon="image">
+    Finds all `<svg>` elements on the page that fall within the icon size range (4–200px in both dimensions). Deduplicates by `outerHTML` and records width, height, `viewBox`, fill color, stroke color, and CSS classes. Returns the deduplicated set with a total count.
+  </Card>
+  <Card title="Fonts" icon="text">
+    Reads `CSSFontFaceRule` declarations from accessible stylesheets (family, style, weight, src), scans `<link>` elements for Google Fonts URLs, and iterates `document.fonts` for all fonts the browser has loaded. Returns a structured object with font faces, Google Fonts links, and document font entries so the output can generate ready-to-use `@font-face` CSS.
+  </Card>
+  <Card title="Images" icon="photo">
+    Queries all `<img>`, `<picture img>`, and `[role="img"]` elements larger than 5×5px. For each one it records dimensions, `object-fit`, `object-position`, `border-radius`, `filter`, `opacity`, and `aspect-ratio`. The results are used to detect common image pattern types: avatar, hero, thumbnail, and gallery.
+  </Card>
+  <Card title="Responsive" icon="monitor-smartphone">
+    Requires `--responsive`. Opens four separate browser contexts at mobile (375px), tablet (768px), desktop (1280px), and wide (1920px) viewports. At each size it records heading font sizes, navigation visibility, layout column counts, and other key metrics. Compares adjacent viewports to map what changes at each breakpoint.
+  </Card>
+  <Card title="Interactions" icon="cursor-click">
+    Requires `--interactions`. Finds up to 10 buttons, 10 links, and 10 inputs on the page and programmatically triggers `hover()` and `focus()` on each. Captures computed styles before and after each state change to record the exact property transitions — background color shifts, border color changes, box shadow additions, and outline appearances.
+  </Card>
+</CardGroup>
+
+## Automatic vs. flag-triggered extractors
+
+Most extractors run on every invocation without any configuration. Two extractors require flags because they open additional browser sessions and significantly increase extraction time:
+
+| Extractor | How to enable | Why it's optional |
+|-----------|--------------|-------------------|
+| `responsive` | `--responsive` or `--full` | Crawls the page 4 times at different viewport sizes |
+| `interactions` | `--interactions` or `--full` | Programmatically hovers and focuses elements, requiring additional page time |
+
+All other extractors — including colors, typography, spacing, shadows, borders, variables, breakpoints, animations, components, accessibility, layout, scoring, gradients, z-index, icons, fonts, and images — run automatically every time.
+
+<Tip>
+  Use `--full` to enable both `--responsive` and `--interactions` in a single flag, along with component screenshots.
+</Tip>

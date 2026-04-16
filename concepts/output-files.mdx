@@ -1,0 +1,174 @@
+---
+title: "designlang output files explained"
+description: "designlang generates 8 output files per extraction — W3C design tokens, Tailwind config, CSS variables, Figma variables, AI-optimized markdown, and more."
+---
+
+Every time you run designlang against a URL it writes 8 files to an output directory. Each file targets a different consumer: one for feeding to an LLM, one for dropping into a Tailwind project, one for importing into Figma, and so on. All 8 files are generated from the same extraction run with no extra flags required.
+
+## Output files at a glance
+
+| File | What it contains |
+|------|-----------------|
+| `*-design-language.md` | AI-optimized markdown covering all 19 design sections — feed it to any LLM to recreate the design |
+| `*-preview.html` | Visual report with color swatches, type scale, shadow previews, and WCAG accessibility score |
+| `*-design-tokens.json` | [W3C Design Tokens](https://design-tokens.github.io/community-group/format/) format — portable across tools |
+| `*-tailwind.config.js` | Drop-in Tailwind CSS theme with colors, fonts, spacing, radii, and shadows |
+| `*-variables.css` | All extracted values as CSS custom properties |
+| `*-figma-variables.json` | Figma Variables import with light and dark mode collections |
+| `*-theme.js` | React/CSS-in-JS theme object compatible with Chakra UI, Stitches, and Vanilla Extract |
+| `*-shadcn-theme.css` | Ready-to-paste `globals.css` variables for shadcn/ui projects |
+
+## File naming
+
+File names are derived from the URL. The hostname is lowercased and dots are replaced with hyphens. For example:
+
+- `https://stripe.com` → `stripe-com-design-language.md`
+- `https://vercel.com` → `vercel-com-tailwind.config.js`
+- `https://linear.app` → `linear-app-figma-variables.json`
+
+Use `-n` to override the prefix:
+
+```bash
+designlang https://stripe.com -n stripe
+# produces: stripe-design-language.md, stripe-tailwind.config.js, ...
+```
+
+## Output directory
+
+Files are written to `./design-extract-output` by default. Use `-o` to change the directory:
+
+```bash
+designlang https://stripe.com -o ./tokens/stripe
+```
+
+The directory is created automatically if it does not exist.
+
+## File details
+
+### AI markdown (`*-design-language.md`)
+
+The markdown file is the most complete output. It covers 19 sections: color palette, typography, spacing, border radii, box shadows, CSS custom properties, breakpoints, transitions and animations, component patterns with full CSS snippets, layout system, responsive design, interaction states, WCAG 2.1 accessibility, gradients, z-index map, SVG icons, font files, image style patterns, and a quick start block. It is structured so that an LLM can read it and reproduce the design in a new codebase with no further context.
+
+### Visual preview (`*-preview.html`)
+
+A self-contained HTML file — no external dependencies — that renders color swatches, the full type scale, shadow previews, radius examples, and the accessibility score with failing color pairs highlighted. Open it in any browser to review what was extracted without running any code.
+
+### Design tokens (`*-design-tokens.json`)
+
+Follows the [W3C Design Tokens Community Group format](https://design-tokens.github.io/community-group/format/). Tokens are organized into groups — `color`, `fontFamily`, `fontSize`, `spacing`, `borderRadius`, `boxShadow` — and can be imported into Style Dictionary, Token Pipeline, or any other W3C-compatible toolchain.
+
+### Tailwind config (`*-tailwind.config.js`)
+
+A complete `tailwind.config.js` `theme.extend` block. Drop it into an existing Tailwind project or use it as the base of a new one. Includes the extracted color palette, font families, font sizes, spacing scale, border radii, and box shadows mapped to Tailwind token names.
+
+### CSS variables (`*-variables.css`)
+
+Every extracted value — colors, spacing, typography, shadows, radii, and all detected CSS custom properties from `:root` — written as CSS custom properties. The file is structured to be imported as a global stylesheet.
+
+### Figma variables (`*-figma-variables.json`)
+
+A Figma Variables JSON import file. Creates two collections — `Light` and `Dark` — when dark mode was extracted with `--dark`. Color variables, spacing variables, and typography variables are all included. Import it via Figma's **Variables → Import** panel.
+
+### React theme (`*-theme.js`)
+
+A JavaScript theme object compatible with Chakra UI, Stitches, and Vanilla Extract. Exports a default object with `colors`, `fonts`, `fontSizes`, `space`, `radii`, and `shadows` keys matching each library's expected shape.
+
+### shadcn/ui theme (`*-shadcn-theme.css`)
+
+A `globals.css`-compatible block of CSS custom properties formatted for shadcn/ui projects. Paste it into your `globals.css` `:root` and `:root.dark` selectors. Covers the standard shadcn variable names: `--background`, `--foreground`, `--primary`, `--secondary`, `--muted`, `--accent`, `--border`, `--ring`, and more.
+
+## Format examples
+
+<Tabs>
+  <Tab title="Design tokens JSON">
+    ```json
+    {
+      "color": {
+        "primary": {
+          "$type": "color",
+          "$value": "#635bff"
+        },
+        "background": {
+          "$type": "color",
+          "$value": "#ffffff"
+        }
+      },
+      "fontFamily": {
+        "sans": {
+          "$type": "fontFamily",
+          "$value": ["Sohne", "sans-serif"]
+        }
+      },
+      "spacing": {
+        "4": {
+          "$type": "dimension",
+          "$value": "8px"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Tailwind config">
+    ```javascript
+    /** @type {import('tailwindcss').Config} */
+    module.exports = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#635bff',
+            secondary: '#0a2540',
+          },
+          fontFamily: {
+            sans: ['Sohne', 'sans-serif'],
+          },
+          spacing: {
+            '1': '4px',
+            '2': '8px',
+            '4': '16px',
+            '6': '24px',
+          },
+          borderRadius: {
+            sm: '4px',
+            md: '8px',
+            lg: '16px',
+          },
+        },
+      },
+    };
+    ```
+  </Tab>
+  <Tab title="CSS variables">
+    ```css
+    :root {
+      --color-primary: #635bff;
+      --color-background: #ffffff;
+      --color-foreground: #0a2540;
+      --font-sans: 'Sohne', sans-serif;
+      --spacing-1: 4px;
+      --spacing-2: 8px;
+      --spacing-4: 16px;
+      --radius-sm: 4px;
+      --radius-md: 8px;
+    }
+    ```
+  </Tab>
+  <Tab title="shadcn/ui theme">
+    ```css
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 213 94% 12%;
+      --primary: 248 100% 67%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 213 94% 12%;
+      --muted: 210 40% 96%;
+      --border: 214 32% 91%;
+      --ring: 248 100% 67%;
+      --radius: 0.5rem;
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+  When you run with `--full`, designlang also creates a `screenshots/` subdirectory inside the output folder containing `button.png`, `card.png`, `input.png`, `nav.png`, `hero.png`, and `full-page.png`.
+</Info>

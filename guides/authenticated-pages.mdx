@@ -1,0 +1,123 @@
+---
+title: "Extract design from authenticated pages"
+description: "Use designlang's --cookie and --header flags to extract design tokens from pages that require login, session cookies, or authorization headers."
+---
+
+Many of the most valuable design systems live behind authentication — internal dashboards, admin panels, beta environments, and SaaS product UIs that require a logged-in session. designlang supports authenticated extraction through two flags: `--cookie` for session cookies and `--header` for custom HTTP headers including authorization tokens. Both flags are passed directly to the headless browser before the page loads, giving you the same extraction capabilities you get on public pages.
+
+## The `--cookie` flag
+
+Pass one or more cookies as `name=value` pairs. The browser sends these cookies with every request for the session, including page loads and XHR/fetch calls:
+
+```bash
+designlang https://internal-app.com --cookie "session=abc123"
+```
+
+For multiple cookies, repeat the flag or pass a semicolon-separated string:
+
+<CodeGroup>
+
+```bash Multiple --cookie flags
+designlang https://app.example.com \
+  --cookie "session=abc123" \
+  --cookie "csrf=xyz789"
+```
+
+```bash Semicolon-separated cookies
+designlang https://app.example.com \
+  --cookie "session=abc123; csrf=xyz789; user_id=42"
+```
+
+</CodeGroup>
+
+## The `--header` flag
+
+Pass one or more custom HTTP headers as `name:value` pairs. This is the correct approach for APIs and single-page apps that authenticate via `Authorization` headers rather than cookies:
+
+```bash
+designlang https://internal-app.com --header "Authorization:Bearer eyJhbGci..."
+```
+
+Combine cookies and headers in a single command to handle apps that require both:
+
+```bash
+designlang https://internal-app.com \
+  --cookie "session=abc123" \
+  --header "Authorization:Bearer eyJhbGci..." \
+  --header "X-Tenant-ID:acme-corp"
+```
+
+## Use cases
+
+<Steps>
+  <Step title="Internal dashboards">
+    Extract the design language from an internal admin or analytics dashboard that uses session-based authentication. Copy your session cookie from browser DevTools and pass it with `--cookie`.
+  </Step>
+  <Step title="Beta and staging environments">
+    Many staging environments use HTTP Basic Auth or token-based access controls. Pass the required header with `--header` to authenticate the headless browser the same way your browser does.
+  </Step>
+  <Step title="SaaS product pages">
+    Extract the post-login UI of a SaaS product to analyze its design system — useful for competitive research or when building an integration that needs to match the product's visual style.
+  </Step>
+  <Step title="Multi-tenant applications">
+    Some apps serve different themes per tenant. Combine `--cookie` (for session) with `--header` (for tenant ID) to extract the design for a specific tenant's branded environment.
+  </Step>
+</Steps>
+
+## Getting your session cookies
+
+To find the cookies for a site you're logged into:
+
+<Steps>
+  <Step title="Open DevTools">
+    In Chrome or Firefox, open **DevTools** and navigate to the **Application** tab (Chrome) or **Storage** tab (Firefox).
+  </Step>
+  <Step title="Find the cookies">
+    Under **Cookies**, select the domain you want to extract from. Copy the `Name` and `Value` for the relevant session cookie.
+  </Step>
+  <Step title="Pass to designlang">
+    ```bash
+    designlang https://app.example.com --cookie "session_id=<your-value>"
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  Never commit cookies, session tokens, or authorization headers to version control. Treat these values the same way you treat passwords — use environment variables or a secrets manager when scripting authenticated extractions, and rotate credentials after use if they are short-lived tokens.
+</Warning>
+
+## Combine with other flags
+
+Authentication flags work with every other designlang flag and command:
+
+<CodeGroup>
+
+```bash Authenticated full extraction
+designlang https://internal-app.com \
+  --cookie "session=abc123" \
+  --full
+```
+
+```bash Authenticated multi-page crawl
+designlang https://internal-app.com \
+  --cookie "session=abc123" \
+  --depth 5
+```
+
+```bash Authenticated dark mode extraction
+designlang https://internal-app.com \
+  --cookie "session=abc123" \
+  --dark
+```
+
+```bash Authenticated apply
+designlang apply https://internal-app.com \
+  --cookie "session=abc123" \
+  --dir ./my-app
+```
+
+</CodeGroup>
+
+<Note>
+  Cookie and header values are passed directly to Playwright's browser context and are never logged or stored by designlang. They exist only for the duration of the extraction session.
+</Note>

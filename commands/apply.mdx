@@ -1,0 +1,104 @@
+---
+title: "designlang apply — apply design to your project"
+description: "designlang apply <url> extracts a website's design and writes tokens directly into your project. Auto-detects Tailwind, shadcn/ui, or plain CSS frameworks."
+---
+
+`designlang apply` extracts a website's design system and writes the resulting tokens directly into your existing project files — no copy-pasting required. It detects which framework your project uses by inspecting the files on disk, then overwrites the appropriate config files with the freshly extracted values. If you prefer, you can bypass detection and target a specific framework using `--framework`.
+
+## Usage
+
+```bash
+designlang apply <url> [options]
+```
+
+## Options
+
+<ParamField path="--dir" type="string" default=".">
+  Path to your project directory. designlang will look for framework config files inside this directory. Alias: `-d`.
+</ParamField>
+
+<ParamField path="--framework" type="string">
+  Force a specific framework instead of relying on auto-detection. Accepts `tailwind`, `shadcn`, or `css`.
+</ParamField>
+
+<ParamField path="--cookie" type="string">
+  Cookies for extracting authenticated or protected pages. Format: `name=value`. Repeat for multiple cookies.
+</ParamField>
+
+<ParamField path="--header" type="string">
+  Custom HTTP headers. Format: `name:value`. Repeat for multiple headers.
+</ParamField>
+
+## How auto-detection works
+
+When you do not pass `--framework`, designlang inspects your project directory and applies to every framework it finds:
+
+1. If a `tailwind.config.js`, `tailwind.config.ts`, or `tailwind.config.mjs` is found **and** a `components.json` is also present → **shadcn/ui** mode: updates `globals.css` with shadcn CSS variables.
+2. If a Tailwind config is found without `components.json` → **Tailwind** mode: overwrites the Tailwind config with the extracted theme.
+3. In `auto` mode it also always writes a `design-variables.css` file with all extracted values as CSS custom properties.
+
+## What gets written
+
+<Tabs>
+  <Tab title="Tailwind">
+    Overwrites your existing `tailwind.config.js` (or `.ts` / `.mjs`) with a generated theme containing the extracted colors, fonts, spacing values, border radii, and shadows.
+
+    ```bash
+    designlang apply https://stripe.com --dir ./my-app
+    ```
+
+    ```
+    ✓ my-app/tailwind.config.js — tailwind
+    ```
+  </Tab>
+  <Tab title="shadcn/ui">
+    Finds your `globals.css` (checked in `app/globals.css`, `src/app/globals.css`, `styles/globals.css`, and other common locations) and replaces the `@layer base` block with extracted shadcn/ui CSS variables.
+
+    ```bash
+    designlang apply https://stripe.com --dir ./my-app --framework shadcn
+    ```
+
+    ```
+    ✓ my-app/src/app/globals.css — shadcn
+    ```
+  </Tab>
+  <Tab title="Plain CSS">
+    Writes a `design-variables.css` file to your project directory containing all extracted values as CSS custom properties.
+
+    ```bash
+    designlang apply https://stripe.com --dir ./my-app --framework css
+    ```
+
+    ```
+    ✓ my-app/design-variables.css — css-variables
+    ```
+  </Tab>
+</Tabs>
+
+## Examples
+
+<CodeGroup>
+
+```bash Auto-detect framework
+designlang apply https://stripe.com --dir ./my-app
+```
+
+```bash Force Tailwind
+designlang apply https://stripe.com --dir ./my-app --framework tailwind
+```
+
+```bash Force shadcn/ui
+designlang apply https://stripe.com --dir ./my-app --framework shadcn
+```
+
+```bash Authenticated source
+designlang apply https://internal-design.example.com \
+  --dir ./my-app \
+  --cookie "session=abc123"
+```
+
+</CodeGroup>
+
+<Warning>
+  `designlang apply` overwrites existing config files in place. Commit or back up your project before running apply on a production codebase.
+</Warning>

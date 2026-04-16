@@ -1,0 +1,105 @@
+---
+title: "Use designlang as an AI agent skill"
+description: "Install designlang as an agent skill for Claude Code, Cursor, Codex, and 40+ AI coding agents. Trigger it with /extract-design inside your AI editor."
+---
+
+designlang ships as an installable skill for the skills ecosystem, which means any AI coding agent that supports skills — including Claude Code, Cursor, Codex, and dozens of others — can run it as a first-class command. Once installed, you trigger a full design extraction with a single slash command: `/extract-design <url>`. The agent reads the generated markdown file and presents the findings directly in your editor session.
+
+## Install the skill
+
+<Steps>
+  <Step title="Add the skill to your agent">
+    Run the following command in your terminal. This installs the `extract-design` skill from the `Manavarya09/design-extract` repository into your local skills directory.
+
+    ```bash
+    npx skills add Manavarya09/design-extract
+    ```
+  </Step>
+  <Step title="Verify installation">
+    After installation, the skill appears in your agent's available commands. In Claude Code, you can confirm by typing `/` to list available slash commands — `extract-design` should be listed.
+  </Step>
+  <Step title="Run your first extraction">
+    Trigger the skill with a URL. The agent launches a headless browser, extracts the full design language, and returns key findings inline.
+
+    ```
+    /extract-design https://stripe.com
+    ```
+  </Step>
+</Steps>
+
+## Using the skill in Claude Code
+
+In Claude Code, the skill is exposed as a slash command. Pass any publicly accessible URL as the argument:
+
+```
+/extract-design https://vercel.com
+```
+
+Claude Code runs the extraction, reads the generated `*-design-language.md` file, and summarizes the design system for you — primary colors, font families, spacing base unit, WCAG score, and detected component patterns. It then offers next steps like copying the Tailwind config or importing Figma variables.
+
+<Note>
+  The skill's behavior is defined in `skills/extract-design/SKILL.md` inside the repository. It uses the `Bash`, `Read`, `Write`, and `Glob` tools and follows a four-step process: run extraction, read the markdown output, present findings, and offer next steps.
+</Note>
+
+## Claude Code plugin metadata
+
+The skill is bundled with a Claude plugin descriptor at `.claude-plugin/plugin.json`:
+
+```json
+{
+  "name": "design-extract",
+  "description": "Extract the complete design language from any website. Produces W3C design tokens, AI-optimized markdown, Tailwind config, and CSS custom properties.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Manavarya Singh",
+    "url": "https://github.com/Manavarya09"
+  },
+  "skills": "./skills/"
+}
+```
+
+This metadata is read by Claude Code during skill installation to register the plugin name, description, and skills directory path.
+
+## Using the skill with other agents
+
+The skill works with any agent that supports the skills ecosystem. The trigger phrase varies by agent:
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```
+    /extract-design https://example.com
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    Open the command palette and type `extract-design`, or reference it in a chat message. Cursor picks up installed skills from the same skills directory.
+  </Tab>
+  <Tab title="Codex (OpenAI)">
+    Reference the skill by name in your Codex prompt. The agent resolves the skill from the local skills directory and executes the workflow.
+  </Tab>
+  <Tab title="Other agents">
+    Any agent supporting the skills standard can install and invoke this skill. See your agent's documentation for how to reference installed skills in prompts.
+  </Tab>
+</Tabs>
+
+## What the skill does
+
+When invoked, the skill runs this workflow automatically:
+
+<Steps>
+  <Step title="Install designlang if needed">
+    The skill checks for a `designlang` installation and falls back to `npx designlang` if the global binary is not found.
+  </Step>
+  <Step title="Run the extraction">
+    Executes `npx designlang <url> --screenshots` against the provided URL. For dark mode, the skill can be invoked with `--dark`; for multi-page crawling, with `--depth 3`.
+  </Step>
+  <Step title="Read the output">
+    Reads the generated `*-design-language.md` file from `./design-extract-output/` and parses its 19 sections.
+  </Step>
+  <Step title="Present findings and next steps">
+    Returns the primary color palette, font families, spacing base, WCAG score, and component patterns. Offers to copy output files into your project.
+  </Step>
+</Steps>
+
+<Note>
+  The skills ecosystem lets you share and install agent workflows the same way npm lets you share packages. Visit the skills registry to discover other available skills or publish your own.
+</Note>

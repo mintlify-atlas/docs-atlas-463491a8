@@ -1,80 +1,131 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Get started extracting design systems with designlang"
+description: "Go from URL to 8 design output files in under a minute — designlang extracts colors, typography, shadows, and more, no setup required."
 ---
 
-## Get started in three steps
+designlang reverse-engineers the design language of any live website and writes 8 ready-to-use files to disk — including an AI-optimized markdown document, W3C design tokens, a Tailwind config, CSS custom properties, Figma variables, a React theme, a shadcn/ui theme, and a visual HTML preview. You do not need a config file, an API key, or an account. Just a URL.
 
-Get your documentation site running locally and make your first customization.
+<Note>
+  designlang uses Playwright to launch a headless Chromium browser. When you run it for the first time via `npx`, Playwright installs Chromium automatically. This download is ~150 MB and only happens once.
+</Note>
 
-### Step 1: Set up your local environment
+## The fastest path
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Run the extractor">
+    Pass any URL to `designlang`. No install required — `npx` fetches the latest version automatically.
 
-### Step 2: Deploy your changes
+    <CodeGroup>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```bash npx (no install)
+    npx designlang https://stripe.com
+    ```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    ```bash Global install
+    npm install -g designlang
+    designlang https://stripe.com
+    ```
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    </CodeGroup>
+  </Step>
 
-### Step 3: Go live
+  <Step title="Get everything at once">
+    Add `--full` to also capture component screenshots, responsive behavior across 4 viewports, and hover/focus/active interaction states.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    ```bash
+    npx designlang https://stripe.com --full
+    ```
+  </Step>
+
+  <Step title="Use the output files">
+    All files are written to `./design-extract-output/` by default. Each file is named after the URL — for example, extracting `vercel.com` produces:
+
+    ```
+    design-extract-output/
+    ├── vercel-com-design-language.md
+    ├── vercel-com-design-tokens.json
+    ├── vercel-com-tailwind.config.js
+    ├── vercel-com-variables.css
+    ├── vercel-com-preview.html
+    ├── vercel-com-figma-variables.json
+    ├── vercel-com-theme.js
+    └── vercel-com-shadcn-theme.css
+    ```
+
+    Drop any of these files directly into your project. The Tailwind config is a ready-to-use theme extension; the CSS file is a complete set of custom properties; the Figma JSON imports directly into Figma Variables.
+  </Step>
+</Steps>
+
+## Example terminal output
+
+Running `npx designlang https://vercel.com --full` produces output like this:
+
+```text
+  designlang
+  https://vercel.com
+
+  Output files:
+  ✓ vercel-com-design-language.md (32.6KB)
+  ✓ vercel-com-design-tokens.json (5.6KB)
+  ✓ vercel-com-tailwind.config.js (3.4KB)
+  ✓ vercel-com-variables.css (18.6KB)
+  ✓ vercel-com-preview.html (31.8KB)
+  ✓ vercel-com-figma-variables.json (12.4KB)
+  ✓ vercel-com-theme.js (1.4KB)
+  ✓ vercel-com-shadcn-theme.css (477B)
+  ✓ screenshots/button.png
+  ✓ screenshots/card.png
+  ✓ screenshots/nav.png
+  ✓ screenshots/hero.png
+  ✓ screenshots/full-page.png
+
+  Summary:
+  Colors: 27 unique colors
+  Fonts: Geist, Geist Mono
+  Spacing: 18 values (base: 2px)
+  Shadows: 11 unique shadows
+  Radii: 10 unique values
+  Breakpoints: 45 breakpoints
+  Components: 11 types detected (with CSS snippets)
+  CSS Vars: 407 custom properties
+  Layout: 55 grids, 492 flex containers
+  Gradients: 4 unique gradients
+  Z-Index: 8 layers mapped
+  Icons: 23 unique SVGs
+  Font Files: 4 font sources detected
+  Images: 6 style patterns
+  Responsive: 4 viewports, 3 breakpoint changes
+  Interactions: 8 state changes captured
+  A11y: 94% WCAG score (7 failing pairs)
+  Design Score: 68/100 (D) — 4 issues
+```
+
+## What you get (8 files)
+
+| File | What it is |
+|------|------------|
+| `*-design-language.md` | AI-optimized markdown — feed it to any LLM to recreate the design |
+| `*-preview.html` | Visual report with color swatches, type scale, shadow gallery, and a11y score |
+| `*-design-tokens.json` | [W3C Design Tokens](https://design-tokens.github.io/community-group/format/) format |
+| `*-tailwind.config.js` | Drop-in Tailwind CSS theme extension |
+| `*-variables.css` | CSS custom properties |
+| `*-figma-variables.json` | Figma Variables import with dark mode support |
+| `*-theme.js` | React/CSS-in-JS theme for Chakra, Stitches, Vanilla Extract |
+| `*-shadcn-theme.css` | shadcn/ui `globals.css` variables |
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Installation" icon="download" href="/installation">
+    Install globally, run with npx, or add as an agent skill
+  </Card>
+  <Card title="Command reference" icon="terminal" href="/commands/extract">
+    Every flag and option — depth, dark mode, auth, and more
+  </Card>
+  <Card title="Agent skill" icon="robot" href="/guides/agent-skill">
+    Use designlang inside Claude Code and 40+ AI coding agents
+  </Card>
+  <Card title="All commands" icon="list" href="/commands/extract">
+    diff, brands, sync, clone, watch, score, apply
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

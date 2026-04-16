@@ -1,0 +1,101 @@
+---
+title: "Install designlang via npx, npm, or as an agent skill"
+description: "Install designlang globally with npm or run it with npx — requires Node.js 18 or later. Playwright Chromium is installed automatically."
+---
+
+designlang ships as an npm package and works in three ways: run it on demand with `npx` (no install needed), install it globally so the `designlang` command is always available, or register it as an agent skill so AI coding agents like Claude Code can call it directly. All three options require Node.js 18 or later.
+
+<Warning>
+  designlang requires **Node.js 18 or later**. Check your version with `node --version` before proceeding. If you're on an older version, update at [nodejs.org](https://nodejs.org).
+</Warning>
+
+## Install options
+
+<CodeGroup>
+
+```bash npx (no install)
+# Run directly — always uses the latest published version
+npx designlang https://example.com
+```
+
+```bash npm global install
+# Install once, use the designlang command anywhere
+npm install -g designlang
+designlang https://example.com
+```
+
+```bash Agent skill
+# Register as a skill for Claude Code, Cursor, Codex, and 40+ agents
+npx skills add Manavarya09/design-extract
+```
+
+</CodeGroup>
+
+## Playwright and Chromium
+
+designlang uses [Playwright](https://playwright.dev) to launch a headless Chromium browser and capture computed styles from the live DOM. When you install designlang globally, Playwright's `postinstall` script runs automatically:
+
+```bash
+npx playwright install chromium --with-deps
+```
+
+This downloads the Chromium binary and its system dependencies (~150 MB). It only runs once. If the full install fails (for example, in a restricted environment), Playwright falls back to installing Chromium without system dependencies.
+
+When you use `npx designlang` without a global install, Playwright must already be installed in your environment, or the first run will prompt you to install it manually:
+
+```bash
+npx playwright install chromium
+```
+
+<Note>
+  On Linux CI environments, pass `--with-deps` to also install the system libraries Chromium requires (libnss, libatk, libgbm, etc.).
+</Note>
+
+## Verify the installation
+
+After installing globally, confirm the CLI is available:
+
+```bash
+designlang --version
+```
+
+Expected output:
+
+```text
+5.0.0
+```
+
+Then run a quick extraction to confirm Playwright and Chromium are working:
+
+```bash
+designlang https://example.com
+```
+
+A successful run prints the output file list and a summary of extracted design tokens. If Playwright is missing, the error message tells you exactly which command to run.
+
+## Using the agent skill
+
+The agent skill lets AI coding agents invoke designlang as a slash command without leaving the chat. Install it once with:
+
+```bash
+npx skills add Manavarya09/design-extract
+```
+
+In Claude Code, call it with:
+
+```text
+/extract-design https://stripe.com
+```
+
+The skill works with Claude Code, Cursor, Codex, and any other agent that supports the skills ecosystem.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Extract your first design system in under a minute
+  </Card>
+  <Card title="Command reference" icon="terminal" href="/commands/extract">
+    Every flag and option documented with examples
+  </Card>
+</CardGroup>

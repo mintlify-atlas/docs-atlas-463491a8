@@ -1,0 +1,173 @@
+---
+title: "designlang extract — main extraction command"
+description: "designlang <url> crawls a website and generates 8 output files. Key flags: --full, --dark, --depth, --responsive, --interactions, --out, --name."
+---
+
+The `designlang` command is the core of the tool. Point it at any URL and it launches a headless Chromium browser, walks up to 5,000 DOM elements, collects 25+ computed style properties from the live DOM, and writes eight output files — an AI-optimized markdown report, a visual HTML preview, a Tailwind config, CSS custom properties, W3C design tokens, Figma variables, and React and shadcn/ui themes. Use `--full` to also capture component screenshots, responsive breakpoints, and interaction states in one command.
+
+## Usage
+
+```bash
+designlang <url> [options]
+```
+
+## Options
+
+<ParamField path="--out" type="string" default="./design-extract-output">
+  Output directory for all generated files. Alias: `-o`.
+</ParamField>
+
+<ParamField path="--name" type="string">
+  File name prefix for all output files. Defaults to a slug derived from the URL (e.g. `vercel-com`). Alias: `-n`.
+</ParamField>
+
+<ParamField path="--width" type="number" default="1280">
+  Viewport width in pixels for the headless browser. Alias: `-w`.
+</ParamField>
+
+<ParamField path="--height" type="number" default="800">
+  Viewport height in pixels for the headless browser.
+</ParamField>
+
+<ParamField path="--wait" type="number" default="0">
+  Milliseconds to wait after page load before extracting styles. Useful for SPAs that render after hydration.
+</ParamField>
+
+<ParamField path="--dark" type="boolean">
+  Extract dark mode styles in addition to the default light mode. Adds a light/dark diff to the output.
+</ParamField>
+
+<ParamField path="--depth" type="number" default="0">
+  Number of internal pages to crawl beyond the root URL. Use `--depth 3` to pull site-wide tokens across multiple pages.
+</ParamField>
+
+<ParamField path="--screenshots" type="boolean">
+  Capture component screenshots: buttons, cards, inputs, nav, hero section, and full page.
+</ParamField>
+
+<ParamField path="--responsive" type="boolean">
+  Capture the design at four viewports — mobile (375px), tablet (768px), desktop (1280px), and wide (1920px) — and record what changes at each breakpoint.
+</ParamField>
+
+<ParamField path="--interactions" type="boolean">
+  Programmatically trigger hover, focus, and active states on interactive elements and capture the resulting style transitions.
+</ParamField>
+
+<ParamField path="--full" type="boolean">
+  Enable all extra captures: `--screenshots`, `--responsive`, and `--interactions` in one flag.
+</ParamField>
+
+<ParamField path="--cookie" type="string">
+  Pass one or more cookies for extracting authenticated or protected pages. Format: `name=value`. Repeat the flag for multiple cookies.
+</ParamField>
+
+<ParamField path="--header" type="string">
+  Pass one or more custom HTTP headers. Format: `name:value`. Repeat the flag for multiple headers.
+</ParamField>
+
+<ParamField path="--framework" type="string">
+  Generate only a specific framework theme instead of both. Accepts `react` or `shadcn`.
+</ParamField>
+
+<ParamField path="--no-history" type="boolean">
+  Skip saving a snapshot to the local history store. By default every extraction is saved so you can track design changes over time.
+</ParamField>
+
+<ParamField path="--verbose" type="boolean">
+  Print detailed progress output including snapshot counts and individual extraction steps.
+</ParamField>
+
+## Output files
+
+Every extraction writes eight files to the output directory, prefixed with a slug derived from the URL (or `--name`):
+
+| File | Description |
+|------|-------------|
+| `*-design-language.md` | AI-optimized markdown — feed directly to any LLM |
+| `*-design-tokens.json` | W3C Design Tokens format |
+| `*-tailwind.config.js` | Drop-in Tailwind CSS theme |
+| `*-variables.css` | CSS custom properties |
+| `*-preview.html` | Visual HTML report with swatches and type scale |
+| `*-figma-variables.json` | Figma Variables import with dark mode support |
+| `*-theme.js` | React / CSS-in-JS theme (Chakra, Stitches, Vanilla Extract) |
+| `*-shadcn-theme.css` | shadcn/ui `globals.css` variables |
+
+## Examples
+
+<CodeGroup>
+
+```bash Basic extraction
+designlang https://stripe.com
+```
+
+```bash Everything at once
+designlang https://stripe.com --full
+```
+
+```bash Multi-page crawl with dark mode
+designlang https://stripe.com --depth 3 --dark
+```
+
+```bash Custom output directory and prefix
+designlang https://stripe.com -o ./tokens -n stripe
+```
+
+```bash Authenticated page
+designlang https://internal-app.com \
+  --cookie "session=abc123" \
+  --header "Authorization:Bearer mytoken"
+```
+
+```bash shadcn/ui theme only, custom viewport
+designlang https://stripe.com --framework shadcn --width 1440 --height 900
+```
+
+</CodeGroup>
+
+## Terminal output example
+
+Running `designlang https://vercel.com --full` produces:
+
+```
+  designlang
+  https://vercel.com
+
+  Output files:
+  ✓ vercel-com-design-language.md (32.6KB) — Markdown (AI-optimized)
+  ✓ vercel-com-design-tokens.json (5.6KB) — Design Tokens (W3C)
+  ✓ vercel-com-tailwind.config.js (3.4KB) — Tailwind Config
+  ✓ vercel-com-variables.css (18.6KB) — CSS Variables
+  ✓ vercel-com-preview.html (31.8KB) — Visual Preview
+  ✓ vercel-com-figma-variables.json (12.4KB) — Figma Variables
+  ✓ vercel-com-theme.js (1.4KB) — React Theme
+  ✓ vercel-com-shadcn-theme.css (477B) — shadcn/ui Theme
+  ✓ screenshots/button.png
+  ✓ screenshots/card.png
+  ✓ screenshots/nav.png
+  ✓ screenshots/hero.png
+  ✓ screenshots/full-page.png
+
+  Summary:
+  Colors: 27 unique colors
+  Fonts: Geist, Geist Mono
+  Spacing: 18 values (base: 2px)
+  Shadows: 11 unique shadows
+  Radii: 10 unique values
+  Breakpoints: 45 breakpoints
+  Components: 11 types detected (with CSS snippets)
+  CSS Vars: 407 custom properties
+  Layout: 55 grids, 492 flex containers
+  Gradients: 4 unique gradients
+  Z-Index: 8 layers mapped
+  Icons: 23 unique SVGs
+  Font Files: 4 font sources detected
+  Images: 6 style patterns
+  Responsive: 4 viewports, 3 breakpoint changes
+  Interactions: 8 state changes captured
+  A11y: 94% WCAG score (7 failing pairs)
+  Design Score: 68/100 (D) — 4 issues
+```
+
+<Note>
+  If extraction fails with a Playwright error, run `npx playwright install chromium` to install the required browser.
+</Note>

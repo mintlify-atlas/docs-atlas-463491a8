@@ -1,0 +1,110 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "designlang",
+  "projectDescription": "A CLI tool that reverse-engineers any website's complete design system — colors, typography, spacing, shadows, and more — and outputs 8 ready-to-use files including W3C design tokens, Tailwind config, and AI-optimized markdown.",
+  "theme": "luma",
+  "primaryColor": "#6366f1",
+  "lightColor": "#eef2ff",
+  "darkColor": "#312e81",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/how-it-works",
+              "concepts/output-files",
+              "concepts/extractors"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/agent-skill",
+              "guides/dark-mode",
+              "guides/authenticated-pages",
+              "guides/responsive-capture",
+              "guides/multi-brand"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Command Reference",
+        "groups": [
+          {
+            "group": "Commands",
+            "pages": [
+              "commands/extract",
+              "commands/apply",
+              "commands/clone",
+              "commands/score",
+              "commands/diff",
+              "commands/brands",
+              "commands/sync",
+              "commands/watch",
+              "commands/history"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/options",
+              "configuration/output-formats",
+              "configuration/troubleshooting"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Extracts complete design language from any live website using headless Chromium via Playwright",
+    "Generates 8 output formats: AI-optimized markdown, W3C design tokens, Tailwind config, CSS variables, Figma variables, React theme, shadcn/ui theme, and visual HTML preview",
+    "Captures layout patterns (grids, flexbox), responsive behavior across 4 breakpoints, and interaction states (hover, focus, active)",
+    "Design system scoring across 7 categories with WCAG 2.1 accessibility analysis",
+    "Multi-brand comparison matrix for side-by-side design analysis",
+    "Works as an agent skill for Claude Code, Cursor, Codex, and 40+ AI coding agents",
+    "Live site sync to auto-update local tokens when the deployed site changes",
+    "Clone command generates a working Next.js starter with the extracted design applied"
+  ],
+  "publicApiSurface": [
+    "designlang <url> [options]",
+    "designlang apply <url>",
+    "designlang clone <url>",
+    "designlang score <url>",
+    "designlang diff <urlA> <urlB>",
+    "designlang brands <urls...>",
+    "designlang sync <url>",
+    "designlang watch <url>",
+    "designlang history <url>",
+    "extractDesignLanguage(url, options)",
+    "formatMarkdown(design)",
+    "formatTokens(design)",
+    "formatTailwind(design)",
+    "formatCssVars(design)",
+    "formatPreview(design)",
+    "formatFigma(design)",
+    "formatReactTheme(design)",
+    "formatShadcnTheme(design)",
+    "diffDesigns(designA, designB)",
+    "scoreDesignSystem(design)",
+    "applyDesign(url, options)",
+    "generateClone(design, outDir)",
+    "compareBrands(urls)",
+    "syncDesign(url, options)",
+    "watchSite(url)",
+    "captureResponsive(url, options)",
+    "captureInteractions(url, options)"
+  ]
+}

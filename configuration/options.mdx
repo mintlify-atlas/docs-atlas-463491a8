@@ -1,0 +1,108 @@
+---
+title: "designlang CLI options reference"
+description: "Complete reference for all designlang CLI flags and options — viewport size, output directory, auth cookies, framework selection, and capture modes."
+---
+
+Every option accepted by the main `designlang <url>` command is documented here. Sub-commands (`sync`, `watch`, `brands`, etc.) accept a subset of these options — see their individual reference pages for details.
+
+## Output options
+
+<ParamField path="--out" type="string" default="./design-extract-output">
+  Directory where all output files are written. Created automatically if it does not exist. Accepts absolute or relative paths.
+</ParamField>
+
+<ParamField path="--name" type="string">
+  Prefix for all generated filenames. Defaults to a slug derived from the URL (e.g., `stripe-com`). Set this to `brand` to get `brand-design-language.md`, `brand-tailwind.config.js`, etc.
+</ParamField>
+
+## Viewport options
+
+<ParamField path="--width" type="number" default="1280">
+  Browser viewport width in pixels. Use a smaller value (e.g., `375`) to extract the mobile design.
+</ParamField>
+
+<ParamField path="--height" type="number" default="800">
+  Browser viewport height in pixels.
+</ParamField>
+
+<ParamField path="--wait" type="number" default="0">
+  Milliseconds to wait after the page reaches network idle before extracting styles. Increase this for SPAs that render asynchronously or sites with skeleton loading states.
+</ParamField>
+
+## Capture modes
+
+<ParamField path="--dark" type="boolean">
+  Extract dark mode styles in addition to the default light mode. Adds a dark mode section to the markdown output and generates dark-mode-aware Figma variables.
+</ParamField>
+
+<ParamField path="--depth" type="number" default="0">
+  Number of internal pages to crawl in addition to the root URL. A depth of `2` visits up to 2 additional pages discovered via internal links, aggregating tokens site-wide.
+</ParamField>
+
+<ParamField path="--screenshots" type="boolean">
+  Capture screenshots of detected components: buttons, cards, inputs, navigation, hero sections, and a full-page screenshot. Screenshots are saved to an `screenshots/` subdirectory inside `--out`.
+</ParamField>
+
+<ParamField path="--responsive" type="boolean">
+  Crawl the site at four viewport widths (375px, 768px, 1280px, 1920px) and record what changes between breakpoints — font sizes, nav visibility, column counts, and more.
+</ParamField>
+
+<ParamField path="--interactions" type="boolean">
+  Programmatically trigger hover, focus, and active states on buttons, links, and inputs, then capture the computed style transitions.
+</ParamField>
+
+<ParamField path="--full" type="boolean">
+  Shorthand that enables `--screenshots`, `--responsive`, and `--interactions` simultaneously.
+</ParamField>
+
+## Auth options
+
+<ParamField path="--cookie" type="string[]">
+  One or more cookies to attach to every request, in `name=value` format. Pass the flag multiple times or use a space-separated list for multiple cookies.
+</ParamField>
+
+<ParamField path="--header" type="string[]">
+  One or more custom HTTP headers in `name:value` format. Useful for `Authorization` headers on protected internal tools.
+</ParamField>
+
+## Theme options
+
+<ParamField path="--framework" type="string">
+  Limit framework-specific theme output to one target. Accepted values: `react` (generates `*-theme.js` only) or `shadcn` (generates `*-shadcn-theme.css` only). When omitted, both files are generated.
+</ParamField>
+
+## Misc options
+
+<ParamField path="--no-history" type="boolean">
+  Skip saving a snapshot to `~/.designlang/<hostname>.json`. Use this in CI or batch runs where snapshot accumulation is not desired.
+</ParamField>
+
+<ParamField path="--verbose" type="boolean">
+  Print detailed progress during extraction, including snapshot counts and per-step timing.
+</ParamField>
+
+## Example: combining multiple flags
+
+Extract from a password-protected staging site at mobile viewport, crawl 3 pages deep, and capture responsive breakpoints:
+
+```bash
+designlang https://staging.example.com \
+  --cookie "session=abc123; remember=1" \
+  --header "Authorization:Bearer eyJhbGci..." \
+  --width 375 \
+  --depth 3 \
+  --responsive \
+  --wait 1500 \
+  --out ./tokens/staging \
+  --name staging
+```
+
+Extract everything from a public site in one pass:
+
+```bash
+designlang https://stripe.com --full --dark --depth 2 --verbose
+```
+
+<Info>
+  All options are parsed by [Commander](https://github.com/tj/commander.js). Boolean flags like `--dark` and `--full` do not accept a value — their presence alone enables the feature.
+</Info>

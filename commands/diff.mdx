@@ -1,0 +1,120 @@
+---
+title: "designlang diff — compare two site designs"
+description: "designlang diff <urlA> <urlB> extracts and compares the design languages of two websites, generating a markdown report and visual HTML comparison."
+---
+
+`designlang diff` extracts the full design language from two URLs and compares them side by side. It produces two output files: a `diff.md` markdown report and a `diff.html` visual comparison that renders color swatches inline for easy scanning. Use it to audit a redesign against the original, compare a competitor's design system to yours, or verify that a staging site matches production before shipping.
+
+## Usage
+
+```bash
+designlang diff <urlA> <urlB> [options]
+```
+
+## Options
+
+<ParamField path="--out" type="string" default="./design-diff-output">
+  Output directory where `diff.md` and `diff.html` are written. Alias: `-o`.
+</ParamField>
+
+## Output files
+
+| File | Description |
+|------|-------------|
+| `diff.md` | Markdown comparison table suitable for pasting into PRs, issues, or design reviews |
+| `diff.html` | Dark-themed visual comparison with inline color swatches and labeled sections |
+
+## What the diff compares
+
+The engine compares five categories between the two sites:
+
+- **Colors** — which hex values are unique to each site, which are shared, and how the primary and secondary colors differ
+- **Typography** — font families present only in site A, only in site B, or in both
+- **Spacing** — whether the base spacing unit differs and how many spacing values each site uses
+- **Accessibility** — WCAG scores side by side (e.g. `94%` vs `71%`)
+- **Components** — which component patterns were detected in each site and which are shared
+
+## Markdown report format
+
+The generated `diff.md` follows this structure:
+
+```markdown
+# Design Comparison
+
+|  | Site A | Site B |
+|---|--------|--------|
+| URL | https://stripe.com | https://vercel.com |
+
+## Colors
+
+### Differences
+
+| Property | Site A | Site B |
+|----------|--------|--------|
+| primary | `#635bff` | `#0070f3` |
+| secondary | `#0a2540` | `#7928ca` |
+
+**Only in Site A:** `#f6f9fc`, `#425466`, ...
+**Only in Site B:** `#171717`, `#888888`, ...
+**Shared:** `#ffffff`, `#000000`
+
+## Typography
+
+**Only in Site A:** `Sohne`, `Sohne Mono`
+**Only in Site B:** `Geist`, `Geist Mono`
+
+## Spacing
+
+| Property | Site A | Site B |
+|----------|--------|--------|
+| base unit | `4px` | `2px` |
+
+## Accessibility
+
+| Property | Site A | Site B |
+|----------|--------|--------|
+| WCAG score | `88%` | `94%` |
+
+## Components
+
+**Only in Site A:** `card`, `pricing-table`
+**Only in Site B:** `command-menu`
+**Shared:** `button`, `input`, `nav`, `footer`
+```
+
+## Terminal summary
+
+After writing the files, the diff command prints a quick inline summary of every property that changed:
+
+```
+  designlang diff
+  https://stripe.com
+  https://vercel.com
+
+  ✓ diff.md — Markdown comparison
+  ✓ diff.html — Visual comparison
+
+  Saved to ./design-diff-output
+
+  ≠ Colors — primary: #635bff → #0070f3
+  ≠ Colors — secondary: #0a2540 → #7928ca
+  ≠ Accessibility — WCAG score: 88% → 94%
+```
+
+## Examples
+
+<CodeGroup>
+
+```bash Compare two sites
+designlang diff https://stripe.com https://vercel.com
+```
+
+```bash Custom output directory
+designlang diff https://stripe.com https://vercel.com -o ./comparisons/stripe-vs-vercel
+```
+
+</CodeGroup>
+
+<Note>
+  The diff runs two full extractions sequentially. For large or JavaScript-heavy sites, expect the command to take 30–60 seconds per URL.
+</Note>
